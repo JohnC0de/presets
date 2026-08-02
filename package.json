@@ -1,0 +1,19 @@
+{
+  "name": "@john/presets",
+  "version": "1.0.0",
+  "description": "Shared TypeScript / oxlint / editor presets for the projects workspace",
+  "type": "module",
+  "files": [
+    "tsconfig.base.json",
+    ".oxlintrc.json",
+    "editorconfig.ini",
+    "gitattributes.txt",
+    "README.md"
+  ],
+  "exports": {
+    "./tsconfig.base.json": "./tsconfig.base.json",
+    "./.oxlintrc.json": "./.oxlintrc.json",
+    "./editorconfig.ini": "./editorconfig.ini",
+    "./gitattributes.txt": "./gitattributes.txt"
+  }
+}

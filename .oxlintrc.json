@@ -1,0 +1,82 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "promise"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn"
+  },
+  "env": {
+    "builtin": true
+  },
+  "ignorePatterns": [
+    "dist",
+    "build",
+    "target",
+    ".output",
+    ".tanstack",
+    ".vite",
+    "node_modules",
+    "**/*.gen.ts"
+  ],
+  "rules": {
+    "no-console": ["warn", { "allow": ["warn", "error"] }],
+    "no-var": "error",
+    "eqeqeq": ["warn", "always", { "null": "ignore" }],
+    "no-eval": "error",
+    "no-new-func": "error",
+    "no-throw-literal": "error",
+    "no-self-compare": "error",
+    "no-template-curly-in-string": "error",
+    "no-constant-binary-expression": "error",
+    "no-unsafe-optional-chaining": "error",
+    "no-useless-catch": "error",
+    "array-callback-return": "error",
+    "default-case-last": "error",
+    "default-param-last": "error",
+    "prefer-promise-reject-errors": "error",
+    "radix": "error",
+
+    "typescript/no-explicit-any": "warn",
+    "typescript/no-non-null-assertion": "warn",
+    "typescript/consistent-type-imports": "warn",
+    "typescript/no-import-type-side-effects": "warn",
+    "typescript/ban-ts-comment": [
+      "warn",
+      { "ts-expect-error": "allow-with-description", "ts-ignore": true, "ts-nocheck": true }
+    ],
+
+    "oxc/const-comparisons": "error",
+    "oxc/double-comparisons": "error",
+    "oxc/erasing-op": "error",
+    "oxc/missing-throw": "error",
+    "oxc/no-accumulating-spread": "error",
+    "oxc/number-arg-out-of-range": "error",
+    "oxc/only-used-in-recursion": "error",
+    "oxc/uninvoked-array-callback": "error",
+
+    "unicorn/catch-error-name": "error",
+    "unicorn/error-message": "error",
+    "unicorn/new-for-builtins": "error",
+    "unicorn/no-await-in-promise-methods": "error",
+    "unicorn/no-invalid-fetch-options": "error",
+    "unicorn/no-invalid-remove-event-listener": "error",
+    "unicorn/no-single-promise-in-promise-methods": "error",
+    "unicorn/no-thenable": "error",
+    "unicorn/no-unnecessary-await": "error",
+    "unicorn/no-useless-promise-resolve-reject": "error",
+    "unicorn/prefer-node-protocol": "error",
+    "unicorn/prefer-regexp-test": "error",
+    "unicorn/prefer-type-error": "error",
+    "unicorn/throw-new-error": "error",
+    "unicorn/no-abusive-eslint-disable": "error",
+
+    "import/no-self-import": "error",
+    "import/no-cycle": ["warn", { "ignoreTypes": true, "maxDepth": 10 }],
+    "import/no-duplicates": "warn",
+
+    "promise/no-return-wrap": "warn",
+    "promise/no-multiple-resolved": "warn",
+    "promise/valid-params": "off"
+  }
+}
