@@ -27,7 +27,8 @@
 
 # 3d / art source
 *.glb binary
-*.gltf binary
+# .gltf is JSON text (the binary sibling is .glb) - let git diff and normalize it.
+*.gltf text
 *.fbx binary
 *.blend binary
 *.ase binary
