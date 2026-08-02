@@ -6,7 +6,7 @@ from GitHub — no build step, the package is just the config files.
 ## Adopt
 
 ```sh
-bun add -d "git+ssh://git@github.com/JohnC0de/presets.git"
+bun add -d github:JohnC0de/presets
 ```
 
 `package.json`:
@@ -14,18 +14,20 @@ bun add -d "git+ssh://git@github.com/JohnC0de/presets.git"
 ```json
 {
   "devDependencies": {
-    "@john/presets": "git+ssh://git@github.com/JohnC0de/presets.git"
+    "@john/presets": "github:JohnC0de/presets"
   }
 }
 ```
 
-> **Why `git+ssh:` and not `github:JohnC0de/presets`.** This repo is private.
-> Bun resolves the `github:` shorthand (and `git+https:` GitHub URLs) through
-> `api.github.com/repos/.../tarball/`, which it fetches **unauthenticated** — a
-> private repo answers `404`, and setting `GITHUB_TOKEN` does not change that.
-> The `git+ssh:` form makes Bun clone with `git`, which uses the machine's
-> existing credentials. If this repo is ever made public,
-> `github:JohnC0de/presets` becomes valid and is the faster path.
+> **This repo must stay public.** Bun resolves the `github:` shorthand (and
+> `git+https:` GitHub URLs) through `api.github.com/repos/.../tarball/`, which
+> it fetches **unauthenticated**. Flip this repo to private and every dependent
+> project fails `bun install` with a `404` — setting `GITHUB_TOKEN` does not
+> help. The fallback that does work on a private repo is
+> `git+ssh://git@github.com/JohnC0de/presets.git`, which makes Bun clone with
+> `git`, but it needs an SSH key on every machine and CI runner, and it resolves
+> in ~1.8s against ~0.4s for the tarball. Public is the right default here: these
+> are config files with no secrets.
 
 ### TypeScript
 
