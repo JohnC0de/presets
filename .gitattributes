@@ -1,0 +1,47 @@
+* text=auto eol=lf
+
+*.ps1 text eol=crlf
+*.bat text eol=crlf
+
+# images
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.ico binary
+
+# fonts
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+
+# audio
+*.mp3 binary
+*.ogg binary
+*.wav binary
+
+# 3d / art source
+*.glb binary
+*.gltf binary
+*.fbx binary
+*.blend binary
+*.ase binary
+*.aseprite binary
+
+# binaries / engine artifacts
+*.exe binary
+*.dll binary
+*.so binary
+*.apk binary
+*.wasm binary
+*.pck binary
+*.res binary
+*.scn binary
+
+# archives / documents
+*.zip binary
+*.rar binary
+*.7z binary
+*.pdf binary
