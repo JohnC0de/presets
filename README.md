@@ -6,7 +6,7 @@ from GitHub — no build step, the package is just the config files.
 ## Adopt
 
 ```sh
-bun add -d github:JohnC0de/presets
+bun add -d "git+ssh://git@github.com/JohnC0de/presets.git"
 ```
 
 `package.json`:
@@ -14,10 +14,18 @@ bun add -d github:JohnC0de/presets
 ```json
 {
   "devDependencies": {
-    "@john/presets": "github:JohnC0de/presets"
+    "@john/presets": "git+ssh://git@github.com/JohnC0de/presets.git"
   }
 }
 ```
+
+> **Why `git+ssh:` and not `github:JohnC0de/presets`.** This repo is private.
+> Bun resolves the `github:` shorthand (and `git+https:` GitHub URLs) through
+> `api.github.com/repos/.../tarball/`, which it fetches **unauthenticated** — a
+> private repo answers `404`, and setting `GITHUB_TOKEN` does not change that.
+> The `git+ssh:` form makes Bun clone with `git`, which uses the machine's
+> existing credentials. If this repo is ever made public,
+> `github:JohnC0de/presets` becomes valid and is the faster path.
 
 ### TypeScript
 
