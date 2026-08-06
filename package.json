@@ -1,19 +1,51 @@
 {
   "name": "@john/presets",
-  "version": "1.0.0",
-  "description": "Shared TypeScript / oxlint / editor presets for the projects workspace",
+  "version": "1.1.0",
+  "description": "Shared tooling presets for personal projects: TypeScript, oxlint, oxfmt, editorconfig, gitattributes, fallow",
   "type": "module",
   "files": [
     "tsconfig.base.json",
+    "tsconfig.bun.json",
+    "tsconfig.react.json",
     ".oxlintrc.json",
+    "oxlint.react.json",
+    "oxfmtrc.json",
+    "fallow.base.json",
     "editorconfig.ini",
     "gitattributes.txt",
+    "scripts/sync.mjs",
     "README.md"
   ],
   "exports": {
     "./tsconfig.base.json": "./tsconfig.base.json",
+    "./tsconfig.bun.json": "./tsconfig.bun.json",
+    "./tsconfig.react.json": "./tsconfig.react.json",
     "./.oxlintrc.json": "./.oxlintrc.json",
+    "./oxlint.react.json": "./oxlint.react.json",
+    "./oxfmtrc.json": "./oxfmtrc.json",
+    "./fallow.base.json": "./fallow.base.json",
     "./editorconfig.ini": "./editorconfig.ini",
-    "./gitattributes.txt": "./gitattributes.txt"
-  }
+    "./gitattributes.txt": "./gitattributes.txt",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "presets-sync": "./scripts/sync.mjs"
+  },
+  "peerDependencies": {
+    "fallow": "3.10.0",
+    "oxfmt": "0.61.0",
+    "oxlint": "1.76.0",
+    "typescript": "7.0.2"
+  },
+  "peerDependenciesMeta": {
+    "fallow": { "optional": true },
+    "oxfmt": { "optional": true },
+    "oxlint": { "optional": true },
+    "typescript": { "optional": true }
+  },
+  "engines": {
+    "bun": ">=1.2.0"
+  },
+  "keywords": ["presets", "oxlint", "oxfmt", "typescript", "fallow", "editorconfig"],
+  "license": "MIT"
 }

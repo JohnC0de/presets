@@ -1,0 +1,51 @@
+{
+  "$schema": "https://raw.githubusercontent.com/fallow-rs/fallow/main/schema.json",
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/build/**",
+    "**/target/**",
+    "**/coverage/**",
+    "**/.output/**",
+    "**/.tanstack/**",
+    "**/.vite/**",
+    "**/.next/**",
+    "**/node_modules/**",
+    "docs/**",
+    ".agents/**",
+    ".grok/**",
+    ".fallow/**",
+    "**/*.gen.ts"
+  ],
+  "ignoreExportsUsedInFile": true,
+  "rules": {
+    "unused-files": "error",
+    "unused-dependencies": "error",
+    "unlisted-dependencies": "error",
+    "circular-dependencies": "error",
+    "duplicate-exports": "error",
+    "unresolved-imports": "error",
+    "unused-exports": "error",
+    "unused-types": "off",
+    "unused-class-members": "off",
+    "unused-enum-members": "off",
+    "unused-dev-dependencies": "warn",
+    "unused-optional-dependencies": "warn"
+  },
+  "duplicates": {
+    "enabled": true,
+    "mode": "mild",
+    "minLines": 8,
+    "minOccurrences": 2
+  },
+  "health": {
+    "maxCyclomatic": 20,
+    "maxCognitive": 15,
+    "maxCrap": 40,
+    "maxUnitSize": 80,
+    "ignore": ["**/*.{test,spec}.{ts,tsx,js,mjs,cjs}", "scripts/**"]
+  },
+  "audit": {
+    "gate": "all",
+    "css": false
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxfmt/configuration_schema.json",
+  "printWidth": 100,
+  "tabWidth": 2,
+  "semi": false,
+  "singleQuote": false,
+  "trailingComma": "all",
+  "bracketSpacing": true,
+  "bracketSameLine": false,
+  "arrowParens": "always",
+  "endOfLine": "lf",
+  "quoteProps": "as-needed",
+  "insertFinalNewline": true,
+  "sortPackageJson": {
+    "sortScripts": false
+  },
+  "ignorePatterns": [
+    "**/dist/**",
+    "**/build/**",
+    "**/target/**",
+    "**/coverage/**",
+    "**/.output/**",
+    "**/.tanstack/**",
+    "**/.vite/**",
+    "**/.next/**",
+    "**/node_modules/**",
+    "**/src/routeTree.gen.ts",
+    "**/bun.lock",
+    "**/package-lock.json",
+    "**/pnpm-lock.yaml"
+  ]
+}

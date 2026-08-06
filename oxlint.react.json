@@ -1,0 +1,48 @@
+{
+  "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
+  "extends": ["./.oxlintrc.json"],
+  "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "promise", "react", "jsx-a11y"],
+  "env": {
+    "builtin": true,
+    "browser": true
+  },
+  "settings": {
+    "jsx-a11y": {
+      "components": {
+        "Button": "button",
+        "Input": "input",
+        "Label": "label",
+        "Textarea": "textarea"
+      }
+    }
+  },
+  "rules": {
+    "react/react-in-jsx-scope": "off",
+    "react/rules-of-hooks": "error",
+    "react/exhaustive-deps": "warn",
+    "typescript/no-misused-promises": "error",
+    "typescript/no-unsafe-type-assertion": "off",
+    "eslint/no-underscore-dangle": "off",
+    "jsx-a11y/alt-text": "error",
+    "jsx-a11y/anchor-has-content": "error",
+    "jsx-a11y/aria-props": "error",
+    "jsx-a11y/aria-proptypes": "error",
+    "jsx-a11y/click-events-have-key-events": "error",
+    "jsx-a11y/heading-has-content": "error",
+    "jsx-a11y/interactive-supports-focus": "error",
+    "jsx-a11y/prefer-tag-over-role": "off"
+  },
+  "ignorePatterns": [
+    "dist",
+    "build",
+    "target",
+    ".output",
+    ".tanstack",
+    ".vite",
+    ".next",
+    "node_modules",
+    "**/*.gen.ts",
+    "src/routeTree.gen.ts",
+    "drizzle"
+  ]
+}
