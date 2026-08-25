@@ -113,12 +113,24 @@ If `extends` does not merge `jsPlugins` in your oxlint version, redeclare:
 }
 ```
 
-Lint with type-aware (matches the preset `options.typeAware`):
+Lint with type-aware + type-check (matches the preset `options.typeAware` /
+`options.typeCheck`). Put those options in the **consumer root** `.oxlintrc.json`
+as well — oxlint only treats them as official on the root config:
+
+```json
+{
+  "extends": ["./node_modules/@john/presets/oxlint.react.json"],
+  "options": {
+    "typeAware": true,
+    "typeCheck": true
+  }
+}
+```
 
 ```json
 {
   "scripts": {
-    "lint": "oxlint --type-aware ."
+    "lint": "oxlint --type-aware --type-check ."
   }
 }
 ```
@@ -150,7 +162,7 @@ bunx presets-sync --oxfmt --force
 {
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "lint": "oxlint --type-aware .",
+    "lint": "oxlint --type-aware --type-check .",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "fallow": "fallow",
@@ -159,6 +171,9 @@ bunx presets-sync --oxfmt --force
   }
 }
 ```
+
+`options.typeCheck` can replace a separate `tsc --noEmit` in CI; keeping both is
+redundant but fine while migrating.
 
 ## Aggregate sources (v1.2)
 

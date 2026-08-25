@@ -1,6 +1,6 @@
 {
   "name": "@john/presets",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Shared tooling presets for personal projects: TypeScript, oxlint (+ anti-slop), oxfmt, editorconfig, gitattributes, fallow",
   "keywords": [
     "anti-slop",
@@ -48,7 +48,7 @@
     "build:anti-slop": "bun build ./oxlint/anti-slop/index.ts --outfile=oxlint/anti-slop/index.mjs --target=node --format=esm --packages=external",
     "format": "oxfmt --config oxfmtrc.json .",
     "format:check": "oxfmt --check --config oxfmtrc.json .",
-    "lint": "oxlint --type-aware .",
+    "lint": "oxlint --type-aware --type-check .",
     "check": "bun run build:anti-slop && bun run format:check && bun run lint"
   },
   "devDependencies": {
