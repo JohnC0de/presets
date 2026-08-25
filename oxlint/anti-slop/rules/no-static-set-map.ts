@@ -1,8 +1,8 @@
-import { defineRule } from "@oxlint/plugins";
-import type { ESTree } from "@oxlint/plugins";
+import { defineRule } from "@oxlint/plugins"
+import type { ESTree } from "@oxlint/plugins"
 
 function unwrapExpression(expression: ESTree.Expression): ESTree.Expression {
-  let current = expression;
+  let current = expression
   while (
     current.type === "ParenthesizedExpression" ||
     current.type === "TSAsExpression" ||
@@ -10,47 +10,47 @@ function unwrapExpression(expression: ESTree.Expression): ESTree.Expression {
     current.type === "TSNonNullExpression" ||
     current.type === "TSSatisfiesExpression"
   ) {
-    current = current.expression;
+    current = current.expression
   }
-  return current;
+  return current
 }
 
 function isLiteralKey(node: ESTree.Expression): boolean {
-  const unwrapped = unwrapExpression(node);
+  const unwrapped = unwrapExpression(node)
   return (
     (unwrapped.type === "Literal" &&
       (typeof unwrapped.value === "string" || typeof unwrapped.value === "number")) ||
     (unwrapped.type === "TemplateLiteral" && unwrapped.expressions.length === 0)
-  );
+  )
 }
 
 function isStaticMapEntry(node: ESTree.Expression): boolean {
-  const unwrapped = unwrapExpression(node);
-  if (unwrapped.type !== "ArrayExpression" || unwrapped.elements.length !== 2) return false;
-  const key = unwrapped.elements[0];
-  return key !== null && key.type !== "SpreadElement" && isLiteralKey(key);
+  const unwrapped = unwrapExpression(node)
+  if (unwrapped.type !== "ArrayExpression" || unwrapped.elements.length !== 2) return false
+  const key = unwrapped.elements[0]
+  return key !== null && key.type !== "SpreadElement" && isLiteralKey(key)
 }
 
 function isStaticSetArgument(node: ESTree.Expression): boolean {
-  const unwrapped = unwrapExpression(node);
-  if (unwrapped.type !== "ArrayExpression" || unwrapped.elements.length === 0) return false;
+  const unwrapped = unwrapExpression(node)
+  if (unwrapped.type !== "ArrayExpression" || unwrapped.elements.length === 0) return false
   return unwrapped.elements.every(
     (element) => element !== null && element.type !== "SpreadElement" && isLiteralKey(element),
-  );
+  )
 }
 
 function isStaticMapArgument(node: ESTree.Expression): boolean {
-  const unwrapped = unwrapExpression(node);
-  if (unwrapped.type !== "ArrayExpression" || unwrapped.elements.length === 0) return false;
+  const unwrapped = unwrapExpression(node)
+  if (unwrapped.type !== "ArrayExpression" || unwrapped.elements.length === 0) return false
   return unwrapped.elements.every(
     (element) => element !== null && element.type !== "SpreadElement" && isStaticMapEntry(element),
-  );
+  )
 }
 
 function collectionName(callee: ESTree.Expression): "Set" | "Map" | null {
   return callee.type === "Identifier" && (callee.name === "Set" || callee.name === "Map")
     ? callee.name
-    : null;
+    : null
 }
 
 /** Ban `new Set`/`new Map` of a static literal table — use `Record` instead. */
@@ -69,19 +69,19 @@ export const noStaticSetMapRule = defineRule({
   createOnce(context) {
     return {
       NewExpression(node) {
-        if (node.callee.type === "Super" || node.callee.type === "V8IntrinsicExpression") return;
-        const name = collectionName(node.callee);
-        if (name === null) return;
-        const argument = node.arguments[0];
-        if (argument === undefined || argument.type === "SpreadElement") return;
-        const unwrappedArgument = unwrapExpression(argument);
+        if (node.callee.type === "Super" || node.callee.type === "V8IntrinsicExpression") return
+        const name = collectionName(node.callee)
+        if (name === null) return
+        const argument = node.arguments[0]
+        if (argument === undefined || argument.type === "SpreadElement") return
+        const unwrappedArgument = unwrapExpression(argument)
         const staticTable =
           name === "Set"
             ? isStaticSetArgument(unwrappedArgument)
-            : isStaticMapArgument(unwrappedArgument);
-        if (!staticTable) return;
-        context.report({ node, messageId: "staticCollection", data: { name } });
+            : isStaticMapArgument(unwrappedArgument)
+        if (!staticTable) return
+        context.report({ node, messageId: "staticCollection", data: { name } })
       },
-    };
+    }
   },
-});
+})

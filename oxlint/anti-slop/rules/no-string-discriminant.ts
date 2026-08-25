@@ -1,37 +1,37 @@
-import { defineRule } from "@oxlint/plugins";
-import type { ESTree } from "@oxlint/plugins";
+import { defineRule } from "@oxlint/plugins"
+import type { ESTree } from "@oxlint/plugins"
 
-const BOOLEAN_STATE = new Set(["loading", "isLoading", "completed", "success", "hasError"]);
-const STRING_DISCRIMINANT = new Set(["kind", "status"]);
+const BOOLEAN_STATE = new Set(["loading", "isLoading", "completed", "success", "hasError"])
+const STRING_DISCRIMINANT = new Set(["kind", "status"])
 
-type PropertyNode = ESTree.TSPropertySignature | ESTree.PropertyDefinition;
+type PropertyNode = ESTree.TSPropertySignature | ESTree.PropertyDefinition
 
 function propertyName(node: PropertyNode): string | null {
-  if (node.computed || node.key.type !== "Identifier") return null;
-  return node.key.name;
+  if (node.computed || node.key.type !== "Identifier") return null
+  return node.key.name
 }
 
 function unwrapType(type: ESTree.TSType): ESTree.TSType {
-  let current = type;
+  let current = type
   while (
     current.type === "TSParenthesizedType" ||
     (current.type === "TSTypeOperator" && current.operator === "readonly")
   ) {
-    current = current.typeAnnotation;
+    current = current.typeAnnotation
   }
-  return current;
+  return current
 }
 
 function annotation(node: PropertyNode): ESTree.TSType | null {
-  return node.typeAnnotation?.typeAnnotation ?? null;
+  return node.typeAnnotation?.typeAnnotation ?? null
 }
 
 function isBoolean(type: ESTree.TSType): boolean {
-  return unwrapType(type).type === "TSBooleanKeyword";
+  return unwrapType(type).type === "TSBooleanKeyword"
 }
 
 function isBareString(type: ESTree.TSType): boolean {
-  return unwrapType(type).type === "TSStringKeyword";
+  return unwrapType(type).type === "TSStringKeyword"
 }
 
 /** Ban boolean state bags and `kind`/`status: string` — use a literal discriminant. */
@@ -51,21 +51,21 @@ export const noStringDiscriminantRule = defineRule({
   },
   createOnce(context) {
     const checkProperty = (node: PropertyNode) => {
-      const name = propertyName(node);
-      const type = annotation(node);
-      if (name === null || type === null) return;
+      const name = propertyName(node)
+      const type = annotation(node)
+      if (name === null || type === null) return
       if (BOOLEAN_STATE.has(name) && isBoolean(type)) {
-        context.report({ node: node.key, messageId: "booleanState", data: { name } });
-        return;
+        context.report({ node: node.key, messageId: "booleanState", data: { name } })
+        return
       }
       if (STRING_DISCRIMINANT.has(name) && isBareString(type)) {
-        context.report({ node: node.key, messageId: "stringDiscriminant", data: { name } });
+        context.report({ node: node.key, messageId: "stringDiscriminant", data: { name } })
       }
-    };
+    }
 
     return {
       TSPropertySignature: checkProperty,
       PropertyDefinition: checkProperty,
-    };
+    }
   },
-});
+})

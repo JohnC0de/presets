@@ -1,4 +1,4 @@
-import { defineRule } from "@oxlint/plugins";
+import { defineRule } from "@oxlint/plugins"
 
 /** Ban `new Promise(executor)` — use `Promise.withResolvers()`. */
 export const noNewPromiseRule = defineRule({
@@ -15,9 +15,9 @@ export const noNewPromiseRule = defineRule({
   createOnce(context) {
     return {
       NewExpression(node) {
-        if (node.callee.type !== "Identifier" || node.callee.name !== "Promise") return;
-        context.report({ node, messageId: "newPromise" });
+        if (node.callee.type !== "Identifier" || node.callee.name !== "Promise") return
+        context.report({ node, messageId: "newPromise" })
       },
-    };
+    }
   },
-});
+})

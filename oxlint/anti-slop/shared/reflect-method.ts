@@ -1,24 +1,24 @@
-import type { ESTree, Scope, SourceCode, Variable } from "@oxlint/plugins";
+import type { ESTree, Scope, SourceCode, Variable } from "@oxlint/plugins"
 
 /** Walk scopes from an identifier to the binding Oxlint associated with that name. */
 export function resolveSourceCodeVariable(
   sourceCode: SourceCode,
   identifier: ESTree.IdentifierReference,
 ): Variable | null {
-  let scope: Scope | null = sourceCode.getScope(identifier);
+  let scope: Scope | null = sourceCode.getScope(identifier)
   while (scope !== null) {
-    const variable = scope.set.get(identifier.name);
-    if (variable !== undefined) return variable;
-    scope = scope.upper;
+    const variable = scope.set.get(identifier.name)
+    if (variable !== undefined) return variable
+    scope = scope.upper
   }
-  return null;
+  return null
 }
 
 function isGlobalReflect(sourceCode: SourceCode, expression: ESTree.Expression): boolean {
-  if (expression.type !== "Identifier" || expression.name !== "Reflect") return false;
-  if (sourceCode.isGlobalReference(expression)) return true;
-  const variable = resolveSourceCodeVariable(sourceCode, expression);
-  return variable === null || variable.defs.length === 0;
+  if (expression.type !== "Identifier" || expression.name !== "Reflect") return false
+  if (sourceCode.isGlobalReference(expression)) return true
+  const variable = resolveSourceCodeVariable(sourceCode, expression)
+  return variable === null || variable.defs.length === 0
 }
 
 /** Reports whether a call target names one method on the global Reflect object. */
@@ -27,10 +27,10 @@ export function isGlobalReflectMethodCall(
   callee: ESTree.Expression,
   methodName: string,
 ): boolean {
-  if (!("property" in callee) || !("object" in callee) || !("computed" in callee)) return false;
-  if (!isGlobalReflect(sourceCode, callee.object)) return false;
-  const property = callee.property;
+  if (!("property" in callee) || !("object" in callee) || !("computed" in callee)) return false
+  if (!isGlobalReflect(sourceCode, callee.object)) return false
+  const property = callee.property
   return callee.computed
     ? property.type === "Literal" && property.value === methodName
-    : property.type === "Identifier" && property.name === methodName;
+    : property.type === "Identifier" && property.name === methodName
 }

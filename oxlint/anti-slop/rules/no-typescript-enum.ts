@@ -1,9 +1,9 @@
-import { defineRule } from "@oxlint/plugins";
-import type { ESTree } from "@oxlint/plugins";
+import { defineRule } from "@oxlint/plugins"
+import type { ESTree } from "@oxlint/plugins"
 
 function importedName(node: ESTree.Node): string | null {
-  if (node.type !== "ImportSpecifier") return null;
-  return node.imported.type === "Identifier" ? node.imported.name : String(node.imported.value);
+  if (node.type !== "ImportSpecifier") return null
+  return node.imported.type === "Identifier" ? node.imported.name : String(node.imported.value)
 }
 
 /** Ban TypeScript `enum` and `React.FC` — literal unions and plain functions. */
@@ -22,11 +22,11 @@ export const noTypescriptEnumRule = defineRule({
     },
   },
   createOnce(context) {
-    const reactImports = new Set<string>();
+    const reactImports = new Set<string>()
 
     return {
       Program(node) {
-        reactImports.clear();
+        reactImports.clear()
         for (const statement of node.body) {
           if (
             statement.type === "ImportDeclaration" &&
@@ -36,9 +36,9 @@ export const noTypescriptEnumRule = defineRule({
           ) {
             for (const specifier of statement.specifiers) {
               if (specifier.type === "ImportSpecifier") {
-                const name = importedName(specifier);
+                const name = importedName(specifier)
                 if (name === "FC" || name === "FunctionComponent") {
-                  reactImports.add(specifier.local.name);
+                  reactImports.add(specifier.local.name)
                 }
               }
             }
@@ -46,10 +46,10 @@ export const noTypescriptEnumRule = defineRule({
         }
       },
       TSEnumDeclaration(node) {
-        context.report({ node, messageId: "typescriptEnum" });
+        context.report({ node, messageId: "typescriptEnum" })
       },
       TSTypeReference(node) {
-        const name = node.typeName;
+        const name = node.typeName
         if (
           name.type === "TSQualifiedName" &&
           name.left.type === "Identifier" &&
@@ -57,16 +57,16 @@ export const noTypescriptEnumRule = defineRule({
           name.right.type === "Identifier" &&
           (name.right.name === "FC" || name.right.name === "FunctionComponent")
         ) {
-          context.report({ node, messageId: "reactFc" });
-          return;
+          context.report({ node, messageId: "reactFc" })
+          return
         }
         if (
           name.type === "Identifier" &&
           (reactImports.has(name.name) || name.name === "FC" || name.name === "FunctionComponent")
         ) {
-          context.report({ node, messageId: "reactFc" });
+          context.report({ node, messageId: "reactFc" })
         }
       },
-    };
+    }
   },
-});
+})

@@ -1,7 +1,7 @@
-import { defineRule } from "@oxlint/plugins";
-import type { ESTree } from "@oxlint/plugins";
+import { defineRule } from "@oxlint/plugins"
+import type { ESTree } from "@oxlint/plugins"
 
-type Parameter = ESTree.ParamPattern;
+type Parameter = ESTree.ParamPattern
 type ParameterOwner =
   | ESTree.ArrowFunctionExpression
   | ESTree.Function
@@ -9,34 +9,34 @@ type ParameterOwner =
   | ESTree.TSConstructSignatureDeclaration
   | ESTree.TSConstructorType
   | ESTree.TSFunctionType
-  | ESTree.TSMethodSignature;
+  | ESTree.TSMethodSignature
 
 function parameterAnnotation(parameter: Parameter): ESTree.TSTypeAnnotation | null | undefined {
   if (parameter.type === "TSParameterProperty") {
-    return parameterAnnotation(parameter.parameter);
+    return parameterAnnotation(parameter.parameter)
   }
   if (parameter.type === "RestElement") {
-    return parameter.typeAnnotation ?? parameterAnnotation(parameter.argument);
+    return parameter.typeAnnotation ?? parameterAnnotation(parameter.argument)
   }
   if (parameter.type === "AssignmentPattern") {
-    return parameter.typeAnnotation ?? parameter.left.typeAnnotation;
+    return parameter.typeAnnotation ?? parameter.left.typeAnnotation
   }
-  return parameter.typeAnnotation;
+  return parameter.typeAnnotation
 }
 
 function parameterName(parameter: Parameter, sourceText: string): string {
   if (parameter.type === "TSParameterProperty") {
-    return parameterName(parameter.parameter, sourceText);
+    return parameterName(parameter.parameter, sourceText)
   }
   if (parameter.type === "AssignmentPattern") {
-    return parameterName(parameter.left, sourceText);
+    return parameterName(parameter.left, sourceText)
   }
   if (parameter.type === "RestElement") {
-    return parameterName(parameter.argument, sourceText);
+    return parameterName(parameter.argument, sourceText)
   }
   return parameter.type === "Identifier"
     ? parameter.name
-    : sourceText.replace(/\s*:\s*unknown\s*$/u, "");
+    : sourceText.replace(/\s*:\s*unknown\s*$/u, "")
 }
 
 const ALLOWED_UNKNOWN_NAMES = new Set([
@@ -47,7 +47,7 @@ const ALLOWED_UNKNOWN_NAMES = new Set([
   "unparsed",
   "wire",
   "payload",
-]);
+])
 
 function isTypeGuard(node: ParameterOwner): boolean {
   if (
@@ -60,9 +60,9 @@ function isTypeGuard(node: ParameterOwner): boolean {
     node.type === "TSCallSignatureDeclaration" ||
     node.type === "TSEmptyBodyFunctionExpression"
   ) {
-    return node.returnType?.typeAnnotation.type === "TSTypePredicate";
+    return node.returnType?.typeAnnotation.type === "TSTypePredicate"
   }
-  return false;
+  return false
 }
 
 /** Disallow unknown inputs except type guards, explicit parser inputs, and error-cause enrichment. */
@@ -80,19 +80,19 @@ export const noUnknownParametersRule = defineRule({
   },
   createOnce(context) {
     const checkParameters = (node: ParameterOwner) => {
-      if (isTypeGuard(node)) return;
+      if (isTypeGuard(node)) return
       for (const parameter of node.params) {
-        const annotation = parameterAnnotation(parameter);
-        if (annotation?.typeAnnotation.type !== "TSUnknownKeyword") continue;
-        const name = parameterName(parameter, context.sourceCode.getText(parameter));
-        if (ALLOWED_UNKNOWN_NAMES.has(name.toLowerCase())) continue;
+        const annotation = parameterAnnotation(parameter)
+        if (annotation?.typeAnnotation.type !== "TSUnknownKeyword") continue
+        const name = parameterName(parameter, context.sourceCode.getText(parameter))
+        if (ALLOWED_UNKNOWN_NAMES.has(name.toLowerCase())) continue
         context.report({
           node: annotation.typeAnnotation,
           messageId: "unknownParameter",
           data: { parameter: name },
-        });
+        })
       }
-    };
+    }
 
     return {
       ArrowFunctionExpression: checkParameters,
@@ -105,6 +105,6 @@ export const noUnknownParametersRule = defineRule({
       TSEmptyBodyFunctionExpression: checkParameters,
       TSFunctionType: checkParameters,
       TSMethodSignature: checkParameters,
-    };
+    }
   },
-});
+})
