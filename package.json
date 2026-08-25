@@ -36,7 +36,7 @@
     "./tsconfig.react.json": "./tsconfig.react.json",
     "./.oxlintrc.json": "./.oxlintrc.json",
     "./oxlint.react.json": "./oxlint.react.json",
-    "./oxlint/anti-slop": "./oxlint/anti-slop/index.ts",
+    "./oxlint/anti-slop": "./oxlint/anti-slop/index.mjs",
     "./oxlint/anti-slop/*": "./oxlint/anti-slop/*",
     "./oxfmtrc.json": "./oxfmtrc.json",
     "./fallow.base.json": "./fallow.base.json",
@@ -45,10 +45,11 @@
     "./package.json": "./package.json"
   },
   "scripts": {
+    "build:anti-slop": "bun build ./oxlint/anti-slop/index.ts --outfile=oxlint/anti-slop/index.mjs --target=node --format=esm --packages=external",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
     "lint": "oxlint --type-aware .",
-    "check": "bun run format:check && bun run lint"
+    "check": "bun run build:anti-slop && bun run format:check && bun run lint"
   },
   "devDependencies": {
     "@oxlint/plugins": "1.80.0",

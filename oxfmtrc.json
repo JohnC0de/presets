@@ -27,6 +27,7 @@
     "**/src/routeTree.gen.ts",
     "**/bun.lock",
     "**/package-lock.json",
-    "**/pnpm-lock.yaml"
+    "**/pnpm-lock.yaml",
+    "oxlint/anti-slop/index.mjs"
   ]
 }

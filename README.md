@@ -30,7 +30,7 @@ versions aligned with those pins.
 | TS React/DOM profile          | `tsconfig.react.json` | `"extends": "@john/presets/tsconfig.react.json"` (+ paths/include local) |
 | oxlint base (max + anti-slop) | `.oxlintrc.json`      | `"extends": ["./node_modules/@john/presets/.oxlintrc.json"]`             |
 | oxlint React                  | `oxlint.react.json`   | `"extends": ["./node_modules/@john/presets/oxlint.react.json"]`          |
-| anti-slop plugin              | `oxlint/anti-slop/`   | wired in base via `jsPlugins` (needs `@oxlint/plugins`)                  |
+| anti-slop plugin              | `oxlint/anti-slop/`   | wired in base as `index.mjs` (needs `@oxlint/plugins`; `.ts` is source)  |
 | oxfmt house style             | `oxfmtrc.json`        | **copy** (oxfmt has no `extends` yet) → `.oxfmtrc.json`                  |
 | fallow defaults               | `fallow.base.json`    | `"extends": ["./node_modules/@john/presets/fallow.base.json"]`           |
 | EditorConfig                  | `editorconfig.ini`    | **copy** → `.editorconfig`                                               |
@@ -44,6 +44,9 @@ bunx presets-sync
 
 # also write .oxfmtrc.json from house style
 bunx presets-sync --oxfmt
+
+# optional: also copy anti-slop sources into tools/ (debugging / local edits)
+bunx presets-sync --anti-slop --force
 
 # overwrite everything from the package
 bunx presets-sync --all --force
@@ -85,12 +88,28 @@ bunx presets-sync --all --force
 }
 ```
 
+`jsPlugins` + all anti-slop rules ship in the extended preset (`./oxlint/anti-slop/index.mjs`).
+
 ### oxlint (React)
 
 ```json
 {
   "extends": ["./node_modules/@john/presets/oxlint.react.json"],
   "ignorePatterns": ["src/routeTree.gen.ts"]
+}
+```
+
+If `extends` does not merge `jsPlugins` in your oxlint version, redeclare:
+
+```json
+{
+  "extends": ["./node_modules/@john/presets/oxlint.react.json"],
+  "jsPlugins": [
+    {
+      "name": "anti-slop",
+      "specifier": "./node_modules/@john/presets/oxlint/anti-slop/index.mjs"
+    }
+  ]
 }
 ```
 
@@ -105,20 +124,6 @@ Lint with type-aware (matches the preset `options.typeAware`):
 ```
 
 Add framework-only plugins (`nextjs`, `oxlint-tailwindcss`, Effect) in the consumer.
-
-If `jsPlugins` from `extends` do not resolve in your oxlint version, redeclare:
-
-```json
-{
-  "extends": ["./node_modules/@john/presets/oxlint.react.json"],
-  "jsPlugins": [
-    {
-      "name": "anti-slop",
-      "specifier": "./node_modules/@john/presets/oxlint/anti-slop/index.ts"
-    }
-  ]
-}
-```
 
 ### oxfmt (house style)
 
