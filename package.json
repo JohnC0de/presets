@@ -46,6 +46,7 @@
   },
   "scripts": {
     "build:anti-slop": "bun build ./oxlint/anti-slop/index.ts --outfile=oxlint/anti-slop/index.mjs --target=node --format=esm --packages=external",
+    "build:anti-slop:watch": "bun build ./oxlint/anti-slop/index.ts --outfile=oxlint/anti-slop/index.mjs --target=node --format=esm --packages=external --watch",
     "format": "oxfmt --config oxfmtrc.json .",
     "format:check": "oxfmt --check --config oxfmtrc.json .",
     "lint": "oxlint --type-aware --type-check .",
