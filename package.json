@@ -1,6 +1,6 @@
 {
   "name": "@john/presets",
-  "version": "1.2.1",
+  "version": "1.5.0",
   "description": "Shared tooling presets for personal projects: TypeScript, oxlint (+ anti-slop), oxfmt, editorconfig, gitattributes, fallow",
   "keywords": [
     "anti-slop",
@@ -13,7 +13,7 @@
   ],
   "license": "MIT",
   "bin": {
-    "presets-sync": "./scripts/sync.mjs"
+    "presets-sync": "./bin/presets-sync.ts"
   },
   "files": [
     "tsconfig.base.json",
@@ -26,7 +26,7 @@
     "fallow.base.json",
     "editorconfig.ini",
     "gitattributes.txt",
-    "scripts/sync.mjs",
+    "bin/presets-sync.ts",
     "README.md"
   ],
   "type": "module",
@@ -49,10 +49,15 @@
     "format": "oxfmt --config oxfmtrc.json .",
     "format:check": "oxfmt --check --config oxfmtrc.json .",
     "lint": "oxlint --type-aware --type-check .",
-    "check": "bun run build:anti-slop && bun run format:check && bun run lint"
+    "typecheck": "tsc --noEmit",
+    "fallow": "fallow",
+    "fallow:audit": "fallow audit",
+    "check": "bun run build:anti-slop && bun run format:check && bun run lint && bun run typecheck && bun run fallow"
   },
   "devDependencies": {
     "@oxlint/plugins": "1.80.0",
+    "@types/bun": "1.4.0",
+    "fallow": "3.18.0",
     "oxfmt": "0.65.0",
     "oxlint": "1.80.0",
     "oxlint-tsgolint": "7.0.2001",

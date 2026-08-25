@@ -1,8 +1,97 @@
 // oxlint/anti-slop/index.ts
 import { eslintCompatPlugin } from "@oxlint/plugins";
 
-// oxlint/anti-slop/rules/no-chained-type-assertions.ts
+// oxlint/anti-slop/rules/no-async-context-enter-with.ts
 import { defineRule } from "@oxlint/plugins";
+var noAsyncContextEnterWithRule = defineRule({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow `AsyncLocalStorage.enterWith()`; scope async context with `run(...)` so it cannot leak into later work."
+    },
+    messages: {
+      enterWith: "Do not use `enterWith()`. It mutates the ambient async context with no restore, so later work can inherit the wrong store. Use `run(store, fn)`."
+    }
+  },
+  createOnce(context) {
+    return {
+      CallExpression(node) {
+        const callee = node.callee;
+        if (callee.type !== "MemberExpression" || callee.computed)
+          return;
+        if (callee.property.type !== "Identifier" || callee.property.name !== "enterWith")
+          return;
+        context.report({ node, messageId: "enterWith" });
+      }
+    };
+  }
+});
+
+// oxlint/anti-slop/rules/no-banner-comments.ts
+import { defineRule as defineRule2 } from "@oxlint/plugins";
+var BANNER = /^\s*(?:[=*#-]{4,}|(?:phase|step|section|part)\s+\d)\b/iu;
+var noBannerCommentsRule = defineRule2({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow decorative section-banner comments (`// =====`, `// Phase 1:`) in source."
+    },
+    messages: {
+      banner: "Remove this section banner. Structure the file with names and modules, not `// Phase N` comments."
+    }
+  },
+  createOnce(context) {
+    return {
+      Program() {
+        for (const comment of context.sourceCode.getAllComments()) {
+          if (BANNER.test(comment.value)) {
+            context.report({ node: comment, messageId: "banner" });
+          }
+        }
+      }
+    };
+  }
+});
+
+// oxlint/anti-slop/rules/no-boolean-if-return.ts
+import { defineRule as defineRule3 } from "@oxlint/plugins";
+function booleanReturn(statement) {
+  const inner = statement.type === "BlockStatement" && statement.body.length === 1 ? statement.body[0] : statement;
+  if (inner === undefined || inner.type !== "ReturnStatement")
+    return null;
+  const argument = inner.argument;
+  if (argument === null || argument.type !== "Literal" || typeof argument.value !== "boolean") {
+    return null;
+  }
+  return argument.value;
+}
+var noBooleanIfReturnRule = defineRule3({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow if/else that only returns opposite boolean literals; return the condition instead."
+    },
+    messages: {
+      booleanIfReturn: "Return the condition instead of `if (x) return true; else return false`. Invert with `!` when needed."
+    }
+  },
+  createOnce(context) {
+    return {
+      IfStatement(node) {
+        if (node.alternate === null)
+          return;
+        const thenValue = booleanReturn(node.consequent);
+        const elseValue = booleanReturn(node.alternate);
+        if (thenValue === null || elseValue === null || thenValue === elseValue)
+          return;
+        context.report({ node, messageId: "booleanIfReturn" });
+      }
+    };
+  }
+});
+
+// oxlint/anti-slop/rules/no-chained-type-assertions.ts
+import { defineRule as defineRule4 } from "@oxlint/plugins";
 function isTypeAssertionExpression(node) {
   return node.type === "TSAsExpression" || node.type === "TSTypeAssertion";
 }
@@ -37,7 +126,7 @@ function isForbiddenAssertionChain(node) {
   }
   return assertionCount > 1 && hasNonConstAssertion;
 }
-var noChainedTypeAssertionsRule = defineRule({
+var noChainedTypeAssertionsRule = defineRule4({
   meta: {
     type: "problem",
     docs: {
@@ -60,8 +149,38 @@ var noChainedTypeAssertionsRule = defineRule({
   }
 });
 
+// oxlint/anti-slop/rules/no-closing-brace-label.ts
+import { defineRule as defineRule5 } from "@oxlint/plugins";
+var END_LABEL = /^\s*end(?:\s+\w+)?\s*$/iu;
+var noClosingBraceLabelRule = defineRule5({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow trailing comments that label a closing brace (`} // end if`)."
+    },
+    messages: {
+      braceLabel: "Do not label a closing brace with `// end …`. Indentation already shows the block."
+    }
+  },
+  createOnce(context) {
+    return {
+      Program() {
+        const sourceCode = context.sourceCode;
+        for (const comment of sourceCode.getAllComments()) {
+          if (!END_LABEL.test(comment.value.trim()))
+            continue;
+          const before = sourceCode.getText().slice(Math.max(0, comment.start - 24), comment.start);
+          if (/\}\s*$/u.test(before)) {
+            context.report({ node: comment, messageId: "braceLabel" });
+          }
+        }
+      }
+    };
+  }
+});
+
 // oxlint/anti-slop/rules/no-conditional-empty-object-spread.ts
-import { defineRule as defineRule2 } from "@oxlint/plugins";
+import { defineRule as defineRule6 } from "@oxlint/plugins";
 function unwrapParentheses(node) {
   let current = node;
   while (current.type === "ParenthesizedExpression") {
@@ -76,7 +195,7 @@ function isConditionalEmptyObjectSpread(node) {
   const conditional = unwrapParentheses(node);
   return conditional.type === "ConditionalExpression" && (isEmptyObjectExpression(conditional.consequent) || isEmptyObjectExpression(conditional.alternate));
 }
-var noConditionalEmptyObjectSpreadRule = defineRule2({
+var noConditionalEmptyObjectSpreadRule = defineRule6({
   meta: {
     type: "suggestion",
     docs: {
@@ -99,8 +218,316 @@ var noConditionalEmptyObjectSpreadRule = defineRule2({
   }
 });
 
+// oxlint/anti-slop/rules/no-document-cookie.ts
+import { defineRule as defineRule7 } from "@oxlint/plugins";
+var DOCUMENT_HOSTS = new Set(["document", "globalThis", "window", "self"]);
+function staticString(node) {
+  if (node.type === "Literal" && typeof node.value === "string")
+    return node.value;
+  if (node.type === "TemplateLiteral" && node.expressions.length === 0) {
+    return node.quasis[0]?.value.cooked ?? null;
+  }
+  return null;
+}
+function isCookieProperty(node) {
+  if (node.computed) {
+    return staticString(node.property) === "cookie";
+  }
+  return node.property.type === "Identifier" && node.property.name === "cookie";
+}
+function isDocumentCookieAccess(node) {
+  if (node.type !== "MemberExpression" || !isCookieProperty(node))
+    return false;
+  if (node.object.type === "Identifier" && node.object.name === "document")
+    return true;
+  if (node.object.type !== "MemberExpression" || node.object.computed)
+    return false;
+  return node.object.property.type === "Identifier" && node.object.property.name === "document" && node.object.object.type === "Identifier" && DOCUMENT_HOSTS.has(node.object.object.name);
+}
+var noDocumentCookieRule = defineRule7({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow writing `document.cookie` directly; cookie attributes belong in one sanctioned helper."
+    },
+    messages: {
+      assignment: "Do not assign to `document.cookie`. It bypasses Secure/SameSite/Path defaults and can clobber unrelated cookies."
+    }
+  },
+  createOnce(context) {
+    return {
+      AssignmentExpression(node) {
+        if (isDocumentCookieAccess(node.left)) {
+          context.report({ node, messageId: "assignment" });
+        }
+      }
+    };
+  }
+});
+
+// oxlint/anti-slop/rules/no-eager-singleton.ts
+import { defineRule as defineRule8 } from "@oxlint/plugins";
+var DEFAULT_CALLS = new Set([
+  "drizzle",
+  "betterAuth",
+  "createRedisClient",
+  "postgres",
+  "createClient"
+]);
+var DEFAULT_NEWS = new Set([
+  "RedisClient",
+  "Queue",
+  "Worker",
+  "S3Client",
+  "SQL",
+  "PrismaClient",
+  "MongoClient"
+]);
+function isFunctionNode(node) {
+  return node.type === "ArrowFunctionExpression" || node.type === "FunctionDeclaration" || node.type === "FunctionExpression";
+}
+function isDeferred(node) {
+  let current = node.parent;
+  while (current !== null && current.type !== "Program") {
+    if (isFunctionNode(current))
+      return true;
+    if (current.type === "PropertyDefinition" && current.static !== true)
+      return true;
+    current = current.parent;
+  }
+  return false;
+}
+function identifierName(node) {
+  return node.type === "Identifier" ? node.name : null;
+}
+function extraNames(options, key) {
+  if (typeof options !== "object" || options === null || Array.isArray(options))
+    return [];
+  const value = options[key];
+  return Array.isArray(value) ? value.filter((entry) => typeof entry === "string") : [];
+}
+var noEagerSingletonRule = defineRule8({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow constructing DB/auth/queue/S3 clients at module top level; wrap them in a lazy getter."
+    },
+    messages: {
+      eager: "`{{name}}(...)` at module top level constructs a side-effecting singleton at import time. Wrap it in a lazy `getX()` that runs on first use."
+    },
+    schema: [
+      {
+        type: "object",
+        properties: {
+          callNames: { type: "array", items: { type: "string" } },
+          newNames: { type: "array", items: { type: "string" } }
+        },
+        additionalProperties: false
+      }
+    ]
+  },
+  createOnce(context) {
+    return {
+      CallExpression(node) {
+        if (isDeferred(node))
+          return;
+        const name = identifierName(node.callee);
+        if (name === null)
+          return;
+        const extra = extraNames(context.options?.[0], "callNames");
+        if (!DEFAULT_CALLS.has(name) && !extra.includes(name))
+          return;
+        context.report({ node, messageId: "eager", data: { name } });
+      },
+      NewExpression(node) {
+        if (isDeferred(node))
+          return;
+        const name = identifierName(node.callee);
+        if (name === null)
+          return;
+        const extra = extraNames(context.options?.[0], "newNames");
+        if (!DEFAULT_NEWS.has(name) && !extra.includes(name))
+          return;
+        context.report({ node, messageId: "eager", data: { name: `new ${name}` } });
+      }
+    };
+  }
+});
+
+// oxlint/anti-slop/rules/no-empty-if-chain.ts
+import { defineRule as defineRule9 } from "@oxlint/plugins";
+function isEmptyStatementish(statement) {
+  if (statement.type === "EmptyStatement")
+    return true;
+  if (statement.type !== "BlockStatement")
+    return false;
+  return statement.body.every((inner) => isEmptyStatementish(inner));
+}
+function isEmptyBranch(node) {
+  if (node.type === "IfStatement") {
+    if (!isEmptyBranch(node.consequent))
+      return false;
+    return node.alternate === null ? true : isEmptyBranch(node.alternate);
+  }
+  return isEmptyStatementish(node);
+}
+var noEmptyIfChainRule = defineRule9({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow if/else-if/else chains where every branch is an empty block."
+    },
+    messages: {
+      emptyIfChain: "This if/else chain has no statements. Delete it or put the real work in a branch."
+    }
+  },
+  createOnce(context) {
+    return {
+      IfStatement(node) {
+        const parent = node.parent;
+        if (parent.type === "IfStatement" && parent.alternate === node)
+          return;
+        if (node.alternate === null)
+          return;
+        if (isEmptyBranch(node))
+          context.report({ node, messageId: "emptyIfChain" });
+      }
+    };
+  }
+});
+
+// oxlint/anti-slop/rules/no-foreign-directive.ts
+import { defineRule as defineRule10 } from "@oxlint/plugins";
+var FOREIGN = /\b(?:biome-ignore|prettier-ignore)\b/u;
+var noForeignDirectiveRule = defineRule10({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow `biome-ignore` and `prettier-ignore`; they are dead in an oxlint + oxfmt repo."
+    },
+    messages: {
+      foreign: "`{{kind}}` is not honoured here. Remove it, or use an oxlint disable with a reason."
+    }
+  },
+  createOnce(context) {
+    return {
+      Program() {
+        for (const comment of context.sourceCode.getAllComments()) {
+          const match = FOREIGN.exec(comment.value);
+          if (match) {
+            context.report({
+              node: comment,
+              messageId: "foreign",
+              data: { kind: match[0] }
+            });
+          }
+        }
+      }
+    };
+  }
+});
+
+// oxlint/anti-slop/rules/no-icu-invalid-locale.ts
+import { defineRule as defineRule11 } from "@oxlint/plugins";
+var UNDERSCORE_LOCALE = /^[A-Za-z]{2,3}_[A-Za-z0-9_-]+$/u;
+var INTL_CTORS = new Set([
+  "Collator",
+  "DateTimeFormat",
+  "DisplayNames",
+  "ListFormat",
+  "Locale",
+  "NumberFormat",
+  "PluralRules",
+  "RelativeTimeFormat",
+  "Segmenter"
+]);
+function isIntlCtor(callee) {
+  if (callee.type !== "MemberExpression" || callee.computed)
+    return false;
+  if (callee.object.type !== "Identifier" || callee.object.name !== "Intl")
+    return false;
+  return callee.property.type === "Identifier" && INTL_CTORS.has(callee.property.name);
+}
+function localeArg(node) {
+  const first = node.arguments[0];
+  if (first === undefined || first.type === "SpreadElement")
+    return null;
+  return first;
+}
+function reportIfUnderscore(context, node) {
+  if (node.type === "Literal" && typeof node.value === "string" && UNDERSCORE_LOCALE.test(node.value)) {
+    context.report({ node, messageId: "invalidLocale" });
+  }
+}
+var noIcuInvalidLocaleRule = defineRule11({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow underscore locale tags (`en_US`) in `Intl.*` constructors; use BCP 47 (`en-US`)."
+    },
+    messages: {
+      invalidLocale: "Use a BCP 47 locale tag (`en-US`), not a POSIX underscore tag (`en_US`)."
+    }
+  },
+  createOnce(context) {
+    return {
+      NewExpression(node) {
+        if (!isIntlCtor(node.callee))
+          return;
+        const arg = localeArg(node);
+        if (arg !== null)
+          reportIfUnderscore(context, arg);
+      },
+      CallExpression(node) {
+        if (node.callee.type === "Super" || node.callee.type === "V8IntrinsicExpression")
+          return;
+        if (!isIntlCtor(node.callee))
+          return;
+        const arg = localeArg(node);
+        if (arg !== null)
+          reportIfUnderscore(context, arg);
+      }
+    };
+  }
+});
+
+// oxlint/anti-slop/rules/no-icu-missing-other.ts
+import { defineRule as defineRule12 } from "@oxlint/plugins";
+var KIND = /,\s*(?:plural|selectordinal|select)\s*,/u;
+var OTHER = /\bother\s*\{/u;
+function missingOther(value) {
+  return KIND.test(value) && !OTHER.test(value);
+}
+var noIcuMissingOtherRule = defineRule12({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow ICU `plural` / `select` / `selectordinal` messages that have no `other` fallback."
+    },
+    messages: {
+      missingOther: "ICU `plural`/`select`/`selectordinal` must include an `other` case; without it, formatting throws on unmatched values."
+    }
+  },
+  createOnce(context) {
+    return {
+      Literal(node) {
+        if (typeof node.value !== "string")
+          return;
+        if (missingOther(node.value))
+          context.report({ node, messageId: "missingOther" });
+      },
+      TemplateElement(node) {
+        const cooked = node.value.cooked;
+        if (typeof cooked === "string" && missingOther(cooked)) {
+          context.report({ node, messageId: "missingOther" });
+        }
+      }
+    };
+  }
+});
+
 // oxlint/anti-slop/rules/no-inline-cast-access.ts
-import { defineRule as defineRule3 } from "@oxlint/plugins";
+import { defineRule as defineRule13 } from "@oxlint/plugins";
 function isInlineObjectAssertion(node) {
   return node.typeAnnotation.type === "TSTypeLiteral";
 }
@@ -118,7 +545,7 @@ function isImmediatePropertyRead(node) {
   const expression = parent.expression;
   return expression.type === "MemberExpression" && expression.object === current;
 }
-var noInlineCastAccessRule = defineRule3({
+var noInlineCastAccessRule = defineRule13({
   meta: {
     type: "problem",
     docs: {
@@ -142,7 +569,7 @@ var noInlineCastAccessRule = defineRule3({
 });
 
 // oxlint/anti-slop/rules/no-known-value-widening.ts
-import { defineRule as defineRule4 } from "@oxlint/plugins";
+import { defineRule as defineRule14 } from "@oxlint/plugins";
 
 // oxlint/anti-slop/shared/dictionary-types.ts
 var BUILT_INS = new Set([
@@ -571,7 +998,7 @@ function isDictionaryAccumulatorTarget(destination) {
 function hasParentAssertion(node) {
   return node.parent?.type === "TSAsExpression" || node.parent?.type === "TSTypeAssertion";
 }
-var noKnownValueWideningRule = defineRule4({
+var noKnownValueWideningRule = defineRule14({
   meta: {
     type: "problem",
     docs: {
@@ -653,8 +1080,108 @@ var noKnownValueWideningRule = defineRule4({
   }
 });
 
+// oxlint/anti-slop/rules/no-long-comments.ts
+import { defineRule as defineRule15 } from "@oxlint/plugins";
+var DEFAULT_MAX_LINES = 5;
+var LICENSE = /\b(?:spdx-license-identifier|copyright|licensed under|all rights reserved)\b/iu;
+var DIRECTIVE = /^\s*(?:oxlint|eslint)-(?:disable|enable|disable-next-line|disable-line)\b/u;
+var JSDOC_TAG = /@(?:param|returns?|throws|example|see|deprecated|template|type)\b/u;
+function commentLines(comment) {
+  if (comment.loc === undefined)
+    return comment.value.split(`
+`).length;
+  return comment.loc.end.line - comment.loc.start.line + 1;
+}
+function isSkippable(comment, isFileHeader) {
+  const text = comment.value;
+  if (DIRECTIVE.test(text))
+    return true;
+  if (isFileHeader)
+    return true;
+  if (LICENSE.test(text))
+    return true;
+  if (comment.type === "Block" && JSDOC_TAG.test(text))
+    return true;
+  return false;
+}
+var noLongCommentsRule = defineRule15({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow block comments or adjacent line-comment runs longer than a small line budget."
+    },
+    messages: {
+      longComment: "This comment is {{lines}} lines. Keep comments to {{max}} lines or fewer; name the code instead of narrating it."
+    },
+    schema: [
+      {
+        type: "object",
+        properties: { maxLines: { type: "integer", minimum: 1 } },
+        additionalProperties: false
+      }
+    ],
+    defaultOptions: [{ maxLines: DEFAULT_MAX_LINES }]
+  },
+  createOnce(context) {
+    return {
+      Program() {
+        const option = context.options?.[0];
+        const maxLines = typeof option === "object" && option !== null && !Array.isArray(option) && typeof option.maxLines === "number" ? option.maxLines : DEFAULT_MAX_LINES;
+        const comments = context.sourceCode.getAllComments();
+        let run = [];
+        let runStartLine = 0;
+        const flushRun = () => {
+          if (run.length === 0)
+            return;
+          const first = run[0];
+          if (first === undefined)
+            return;
+          const lines = run.reduce((sum, comment) => sum + commentLines(comment), 0);
+          if (lines > maxLines) {
+            context.report({
+              node: first,
+              messageId: "longComment",
+              data: { lines: String(lines), max: String(maxLines) }
+            });
+          }
+          run = [];
+        };
+        for (const comment of comments) {
+          const startLine = comment.loc?.start.line ?? 1;
+          const isFileHeader = comment.type === "Block" && startLine <= 3;
+          if (isSkippable(comment, isFileHeader)) {
+            flushRun();
+            continue;
+          }
+          if (comment.type === "Block") {
+            flushRun();
+            const lines = commentLines(comment);
+            if (lines > maxLines) {
+              context.report({
+                node: comment,
+                messageId: "longComment",
+                data: { lines: String(lines), max: String(maxLines) }
+              });
+            }
+            continue;
+          }
+          const line = comment.loc?.start.line ?? 0;
+          if (run.length > 0 && line === runStartLine + run.length) {
+            run.push(comment);
+            continue;
+          }
+          flushRun();
+          run = [comment];
+          runStartLine = line;
+        }
+        flushRun();
+      }
+    };
+  }
+});
+
 // oxlint/anti-slop/rules/no-module-mocking.ts
-import { defineRule as defineRule5 } from "@oxlint/plugins";
+import { defineRule as defineRule16 } from "@oxlint/plugins";
 var moduleMockMethods = new Set(["doMock", "mock", "unstable_mockModule"]);
 function importedName(node) {
   if (node.type !== "ImportSpecifier")
@@ -689,7 +1216,7 @@ function moduleMockCall(sourceCode, callee) {
   const method = callee.computed ? property.type === "Literal" && (property.value === "doMock" || property.value === "mock" || property.value === "unstable_mockModule") ? property.value : null : property.type === "Identifier" ? property.name : null;
   return method !== null && moduleMockMethods.has(method);
 }
-var noModuleMockingRule = defineRule5({
+var noModuleMockingRule = defineRule16({
   meta: {
     type: "problem",
     docs: {
@@ -713,8 +1240,8 @@ var noModuleMockingRule = defineRule5({
 });
 
 // oxlint/anti-slop/rules/no-new-promise.ts
-import { defineRule as defineRule6 } from "@oxlint/plugins";
-var noNewPromiseRule = defineRule6({
+import { defineRule as defineRule17 } from "@oxlint/plugins";
+var noNewPromiseRule = defineRule17({
   meta: {
     type: "problem",
     docs: {
@@ -736,7 +1263,7 @@ var noNewPromiseRule = defineRule6({
 });
 
 // oxlint/anti-slop/rules/no-object-parameters.ts
-import { defineRule as defineRule7 } from "@oxlint/plugins";
+import { defineRule as defineRule18 } from "@oxlint/plugins";
 
 // oxlint/anti-slop/shared/lexical-type-parameters.ts
 function isNode(value) {
@@ -798,7 +1325,7 @@ function parameterAnnotation(parameter) {
 function parameterName(parameter, sourceCode) {
   return parameter.type === "Identifier" ? parameter.name : sourceCode.getText(parameter).replace(/\s*:\s*object\s*$/u, "");
 }
-var noObjectParametersRule = defineRule7({
+var noObjectParametersRule = defineRule18({
   meta: {
     type: "problem",
     docs: {
@@ -867,9 +1394,305 @@ var noObjectParametersRule = defineRule7({
   }
 });
 
+// oxlint/anti-slop/rules/no-partial-record-satisfies.ts
+import { defineRule as defineRule19 } from "@oxlint/plugins";
+function isTypeName(node, name) {
+  return node.type === "TSTypeReference" && node.typeName.type === "Identifier" && node.typeName.name === name;
+}
+function unwrapReadonly(typeNode) {
+  if (!isTypeName(typeNode, "Readonly"))
+    return typeNode;
+  const inner = typeNode.typeArguments?.params[0];
+  return inner ?? typeNode;
+}
+function isPartialRecordType(typeNode) {
+  const outer = unwrapReadonly(typeNode);
+  if (!isTypeName(outer, "Partial"))
+    return false;
+  const inner = unwrapReadonly(outer.typeArguments?.params[0] ?? outer);
+  return isTypeName(inner, "Record");
+}
+function isObjectLiteralExpression(node) {
+  if (node.type === "ObjectExpression")
+    return true;
+  if (node.type !== "TSAsExpression")
+    return false;
+  const annotation = node.typeAnnotation;
+  if (annotation.type === "TSTypeReference" && annotation.typeName.type === "Identifier") {
+    if (annotation.typeName.name === "const")
+      return isObjectLiteralExpression(node.expression);
+  }
+  return false;
+}
+var noPartialRecordSatisfiesRule = defineRule19({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow pinning an object literal with `satisfies Partial<Record<Union, T>>`; Partial drops the exhaustiveness `satisfies` would give you."
+    },
+    messages: {
+      partialRecord: "Do not pin an object literal with `satisfies Partial<Record<...>>`. Make the record total, narrow the key union, or stop using `satisfies` for sparse data."
+    }
+  },
+  createOnce(context) {
+    return {
+      TSSatisfiesExpression(node) {
+        if (!isPartialRecordType(node.typeAnnotation))
+          return;
+        if (!isObjectLiteralExpression(node.expression))
+          return;
+        context.report({ node, messageId: "partialRecord" });
+      }
+    };
+  }
+});
+
+// oxlint/anti-slop/rules/no-path-prefix-containment.ts
+import { defineRule as defineRule20 } from "@oxlint/plugins";
+var PATH_APIS = new Set(["dirname", "join", "normalize", "resolve"]);
+function propertyName(node) {
+  if (node.computed) {
+    return node.property.type === "Literal" && typeof node.property.value === "string" ? node.property.value : null;
+  }
+  return node.property.type === "Identifier" ? node.property.name : null;
+}
+function isPathCall(node) {
+  if (node.type !== "CallExpression")
+    return false;
+  const callee = node.callee;
+  if (callee.type !== "MemberExpression")
+    return false;
+  const method = propertyName(callee);
+  if (method === null || !PATH_APIS.has(method))
+    return false;
+  if (callee.object.type === "Identifier" && (callee.object.name === "path" || callee.object.name === "posix" || callee.object.name === "win32")) {
+    return true;
+  }
+  return false;
+}
+function looksLikePathName(name) {
+  return /(?:path|dir|root|file|folder|resolved|candidate|baseDir|basePath)$/iu.test(name);
+}
+function argumentUsesSep(arg) {
+  if (arg.type !== "TemplateLiteral")
+    return false;
+  return arg.expressions.some((expression) => {
+    if (expression.type !== "MemberExpression")
+      return false;
+    return propertyName(expression) === "sep";
+  });
+}
+function startsWithObjectLooksLikePath(object) {
+  if (isPathCall(object))
+    return true;
+  if (object.type === "Identifier")
+    return looksLikePathName(object.name);
+  if (object.type === "CallExpression" && object.callee.type === "MemberExpression") {
+    const method = propertyName(object.callee);
+    return method === "resolve" || method === "normalize" || method === "join";
+  }
+  return false;
+}
+var noPathPrefixContainmentRule = defineRule20({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow path containment via `startsWith(root)`; `/safe/root-backup` matches `/safe/root`."
+    },
+    messages: {
+      prefix: "`startsWith(root)` is not containment: a sibling path shares the prefix. Use `path.relative` and reject `..`, or compare with `${root}${path.sep}`."
+    }
+  },
+  createOnce(context) {
+    return {
+      CallExpression(node) {
+        if (node.callee.type !== "MemberExpression")
+          return;
+        if (propertyName(node.callee) !== "startsWith")
+          return;
+        if (!startsWithObjectLooksLikePath(node.callee.object))
+          return;
+        const first = node.arguments[0];
+        if (first !== undefined && first.type !== "SpreadElement" && argumentUsesSep(first))
+          return;
+        context.report({ node, messageId: "prefix" });
+      }
+    };
+  }
+});
+
+// oxlint/anti-slop/rules/no-physical-properties.ts
+import { defineRule as defineRule21 } from "@oxlint/plugins";
+
+// oxlint/anti-slop/shared/physical-properties.ts
+var PHYSICAL_PATTERNS = [
+  /(?:^|[\s"'`{(])(?:-?)(?:[\w[\]:]*:)?(?:ml|mr|pl|pr)-/u,
+  /(?:^|[\s"'`{(])(?:[\w[\]:]*:)?text-(?:left|right)(?=["'\s`})]|$)/u,
+  /(?:^|[\s"'`{(])(?:[\w[\]:]*:)?border-[lr](?=[-\s"'`})]|$)/u,
+  /(?:^|[\s"'`{(])(?:[\w[\]:]*:)?rounded-(?:l|r|tl|tr|bl|br)(?=[-\s"'`})]|$)/u,
+  /(?:^|[\s"'`{(])(?:-?)(?:[\w[\]:]*:)?(?:left|right)-/u,
+  /(?:^|[\s"'`{(])(?:[\w[\]:]*:)?scroll-(?:ml|mr|pl|pr)-/u,
+  /(?:^|[\s"'`{(])(?:[\w[\]:]*:)?float-(?:left|right)(?=["'\s`})]|$)/u,
+  /(?:^|[\s"'`{(])(?:[\w[\]:]*:)?clear-(?:left|right)(?=["'\s`})]|$)/u
+];
+function hasPhysicalProperty(value) {
+  return PHYSICAL_PATTERNS.some((pattern) => pattern.test(value));
+}
+
+// oxlint/anti-slop/rules/no-physical-properties.ts
+var noPhysicalPropertiesRule = defineRule21({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow physical directional Tailwind/CSS (`ml-`, `text-left`, `left-`) that break RTL."
+    },
+    messages: {
+      physical: "Physical direction breaks RTL. Use logical equivalents: ml→ms, mr→me, pl→ps, pr→pe, left→start, right→end, text-left→text-start."
+    }
+  },
+  createOnce(context) {
+    return {
+      Literal(node) {
+        if (typeof node.value !== "string")
+          return;
+        if (hasPhysicalProperty(node.value)) {
+          context.report({ node, messageId: "physical" });
+        }
+      },
+      TemplateElement(node) {
+        if (hasPhysicalProperty(node.value.raw)) {
+          context.report({ node, messageId: "physical" });
+        }
+      }
+    };
+  }
+});
+
+// oxlint/anti-slop/rules/no-placeholder-comment.ts
+import { defineRule as defineRule22 } from "@oxlint/plugins";
+var PLACEHOLDER = /\b(your code here|implementation here|add your logic|helper function|todo:\s*implement(?:\s+this)?)\b/iu;
+var noPlaceholderCommentRule = defineRule22({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow placeholder comments that mark unfinished generated code instead of a tracked task."
+    },
+    messages: {
+      placeholder: "Remove this placeholder comment. Track unfinished work with `TODO(#issue, @owner)`, or delete the stub."
+    }
+  },
+  createOnce(context) {
+    return {
+      Program() {
+        for (const comment of context.sourceCode.getAllComments()) {
+          if (PLACEHOLDER.test(comment.value)) {
+            context.report({ node: comment, messageId: "placeholder" });
+          }
+        }
+      }
+    };
+  }
+});
+
+// oxlint/anti-slop/rules/no-process-env-outside-boundary.ts
+import { defineRule as defineRule23 } from "@oxlint/plugins";
+
+// oxlint/anti-slop/shared/filename.ts
+function filenameOf(context) {
+  return (context.filename ?? context.getFilename?.() ?? "").replaceAll("\\", "/");
+}
+function isTestPath(filename) {
+  return /\.(?:test|spec)\.[cm]?[jt]sx?$/u.test(filename) || /\/(?:test|tests|__tests__)(?:\/|$)/u.test(filename);
+}
+
+// oxlint/anti-slop/rules/no-process-env-outside-boundary.ts
+var DEFAULT_ALLOWED = [
+  /(?:^|\/)env(?:-base)?\.ts$/u,
+  /(?:^|\/)setup-env\.ts$/u,
+  /(?:^|\/)(?:scripts|tests|__tests__)\/.+/u,
+  /\.(?:config|test|spec)\.[cm]?[jt]sx?$/u
+];
+function isAllowedFile(filename, extra) {
+  if (DEFAULT_ALLOWED.some((pattern) => pattern.test(filename)))
+    return true;
+  return extra.some((allowed) => filename.endsWith(allowed.replaceAll("\\", "/")));
+}
+function staticPropertyName(node) {
+  if (!node.computed) {
+    return node.property.type === "Identifier" ? node.property.name : null;
+  }
+  return node.property.type === "Literal" && typeof node.property.value === "string" ? node.property.value : null;
+}
+function isProcessEnvRoot(node) {
+  return node.type === "MemberExpression" && node.object.type === "Identifier" && node.object.name === "process" && staticPropertyName(node) === "env";
+}
+function envNameForAccess(node) {
+  if (isProcessEnvRoot(node))
+    return "process.env";
+  if (!isProcessEnvRoot(node.object))
+    return "process.env";
+  const propertyName2 = staticPropertyName(node);
+  if (propertyName2 === null)
+    return "process.env[...]";
+  return node.computed ? `process.env[${JSON.stringify(propertyName2)}]` : `process.env.${propertyName2}`;
+}
+function isNestedProcessEnvRoot(node) {
+  if (!isProcessEnvRoot(node))
+    return false;
+  const parent = node.parent;
+  return parent.type === "MemberExpression" && parent.object === node;
+}
+function isProcessEnvAccess(node) {
+  if (isNestedProcessEnvRoot(node))
+    return false;
+  if (isProcessEnvRoot(node))
+    return true;
+  return isProcessEnvRoot(node.object);
+}
+function extraAllowedFiles(options) {
+  if (typeof options !== "object" || options === null || Array.isArray(options))
+    return [];
+  const value = options.allowedFiles;
+  return Array.isArray(value) ? value.filter((entry) => typeof entry === "string") : [];
+}
+var noProcessEnvOutsideBoundaryRule = defineRule23({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow unvalidated `process.env` reads outside env.ts, configs, scripts, and tests."
+    },
+    messages: {
+      processEnv: "Read {{envName}} through an env module, or add this file to the approved `process.env` boundary."
+    },
+    schema: [
+      {
+        type: "object",
+        properties: { allowedFiles: { type: "array", items: { type: "string" } } },
+        additionalProperties: false
+      }
+    ]
+  },
+  createOnce(context) {
+    return {
+      before() {
+        return !isAllowedFile(filenameOf(context), extraAllowedFiles(context.options?.[0]));
+      },
+      MemberExpression(node) {
+        if (!isProcessEnvAccess(node))
+          return;
+        context.report({
+          node,
+          messageId: "processEnv",
+          data: { envName: envNameForAccess(node) }
+        });
+      }
+    };
+  }
+});
+
 // oxlint/anti-slop/rules/no-reflect-apply.ts
-import { defineRule as defineRule8 } from "@oxlint/plugins";
-var noReflectApplyRule = defineRule8({
+import { defineRule as defineRule24 } from "@oxlint/plugins";
+var noReflectApplyRule = defineRule24({
   meta: {
     type: "problem",
     docs: {
@@ -893,8 +1716,8 @@ var noReflectApplyRule = defineRule8({
 });
 
 // oxlint/anti-slop/rules/no-reflect-get.ts
-import { defineRule as defineRule9 } from "@oxlint/plugins";
-var noReflectGetRule = defineRule9({
+import { defineRule as defineRule25 } from "@oxlint/plugins";
+var noReflectGetRule = defineRule25({
   meta: {
     type: "problem",
     docs: {
@@ -918,7 +1741,7 @@ var noReflectGetRule = defineRule9({
 });
 
 // oxlint/anti-slop/rules/no-return-type-utility.ts
-import { defineRule as defineRule10 } from "@oxlint/plugins";
+import { defineRule as defineRule26 } from "@oxlint/plugins";
 var ALLOWED_TYPEOF_QUERIES = new Set([
   "setTimeout",
   "setInterval",
@@ -960,7 +1783,7 @@ function isAllowedReturnType(node) {
     return true;
   return argument.type === "TSTypeQuery" && argument.typeArguments !== null && argument.typeArguments !== undefined;
 }
-var noReturnTypeUtilityRule = defineRule10({
+var noReturnTypeUtilityRule = defineRule26({
   meta: {
     type: "problem",
     docs: {
@@ -982,7 +1805,7 @@ var noReturnTypeUtilityRule = defineRule10({
 });
 
 // oxlint/anti-slop/rules/no-runtime-typeof.ts
-import { defineRule as defineRule11 } from "@oxlint/plugins";
+import { defineRule as defineRule27 } from "@oxlint/plugins";
 function isRuntimeFunction(node) {
   return node.type === "ArrowFunctionExpression" || node.type === "FunctionDeclaration" || node.type === "FunctionExpression";
 }
@@ -996,7 +1819,7 @@ function isInsideTypeGuard(node) {
   }
   return false;
 }
-var noRuntimeTypeofRule = defineRule11({
+var noRuntimeTypeofRule = defineRule27({
   meta: {
     type: "problem",
     docs: {
@@ -1030,13 +1853,13 @@ var noRuntimeTypeofRule = defineRule11({
 });
 
 // oxlint/anti-slop/rules/no-shape-in-symbol-names.ts
-import { defineRule as defineRule12 } from "@oxlint/plugins";
+import { defineRule as defineRule28 } from "@oxlint/plugins";
 var FORBIDDEN_SYMBOL_NAME = "shape";
 var GODOT_SHAPE_ALLOWLIST = /^(?:_?mouse_shape_(?:enter|exit)|(?:Collision|Rectangle|Circle|Capsule|Cylinder|Sphere|Box|Segment|SeparationRay|WorldBoundary|ConcavePolygon|ConvexPolygon|HeightMap)?Shape[23]D?|ShapeCast[23]D|shape_owner_.*|result_shape_invalid)$/i;
 function containsForbiddenSymbolName(name) {
   return name.toLowerCase().includes(FORBIDDEN_SYMBOL_NAME) && !GODOT_SHAPE_ALLOWLIST.test(name);
 }
-function identifierName(node) {
+function identifierName2(node) {
   if (!node)
     return null;
   if (node.type === "Identifier" || node.type === "PrivateIdentifier" || node.type === "JSXIdentifier") {
@@ -1047,7 +1870,7 @@ function identifierName(node) {
   }
   return null;
 }
-var noForbiddenTermInSymbolNamesRule = defineRule12({
+var noForbiddenTermInSymbolNamesRule = defineRule28({
   meta: {
     type: "problem",
     docs: {
@@ -1103,13 +1926,13 @@ var noForbiddenTermInSymbolNamesRule = defineRule12({
         checkIdentifier(node.id, node.id.name);
       },
       TSPropertySignature(node) {
-        checkIdentifier(node.key, identifierName(node.key));
+        checkIdentifier(node.key, identifierName2(node.key));
       },
       PropertyDefinition(node) {
-        checkIdentifier(node.key, identifierName(node.key));
+        checkIdentifier(node.key, identifierName2(node.key));
       },
       MethodDefinition(node) {
-        checkIdentifier(node.key, identifierName(node.key));
+        checkIdentifier(node.key, identifierName2(node.key));
       },
       PrivateIdentifier(node) {
         checkIdentifier(node, node.name);
@@ -1123,8 +1946,268 @@ var noForbiddenTermInSymbolNamesRule = defineRule12({
   }
 });
 
+// oxlint/anti-slop/rules/no-silent-skip.ts
+import { defineRule as defineRule29 } from "@oxlint/plugins";
+var SKIP_CALLEES = new Set(["xit", "xtest", "xdescribe"]);
+var TEST_CALLEES = new Set(["it", "test", "describe"]);
+var SKIP_PROPS = new Set(["skip", "skipIf"]);
+var REASON = /(?:#\d+|FIXME|TODO|flaky|reason:|skip:)/iu;
+function calleeName(callee) {
+  if (callee.type === "Identifier")
+    return callee.name;
+  if (callee.type !== "MemberExpression" || callee.computed)
+    return null;
+  if (callee.object.type !== "Identifier" || callee.property.type !== "Identifier")
+    return null;
+  return `${callee.object.name}.${callee.property.name}`;
+}
+function isTestCallName(name) {
+  if (TEST_CALLEES.has(name) || SKIP_CALLEES.has(name))
+    return true;
+  const dot = name.indexOf(".");
+  if (dot === -1)
+    return false;
+  return TEST_CALLEES.has(name.slice(0, dot));
+}
+function skipKind(name) {
+  if (SKIP_CALLEES.has(name))
+    return "skip";
+  const property = name.split(".").at(-1);
+  if (property !== undefined && SKIP_PROPS.has(property)) {
+    return property === "skipIf" ? "skipIf" : "skip";
+  }
+  return null;
+}
+function titleHasReason(node) {
+  const first = node.arguments[0];
+  if (first === undefined)
+    return false;
+  if (first.type === "Literal" && typeof first.value === "string")
+    return REASON.test(first.value);
+  return false;
+}
+function isLiteralTrue(node) {
+  return node.type === "Literal" && node.value === true;
+}
+function unwrapBlock(statement) {
+  if (statement.type === "BlockStatement" && statement.body.length === 1) {
+    const only = statement.body[0];
+    if (only !== undefined)
+      return only;
+  }
+  return statement;
+}
+function isBareReturn(statement) {
+  const inner = unwrapBlock(statement);
+  return inner.type === "ReturnStatement" && inner.argument === null;
+}
+function insideTestCallback(node) {
+  let current = node.parent;
+  while (current !== null && current.type !== "Program") {
+    if (current.type === "CallExpression") {
+      const name = calleeName(current.callee);
+      if (name !== null && isTestCallName(name))
+        return true;
+    }
+    current = current.parent;
+  }
+  return false;
+}
+var noSilentSkipRule = defineRule29({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow skipped tests without a reason, constant skipIf(true), and early returns that swallow a failing test."
+    },
+    messages: {
+      skipWithoutReason: "Do not skip a test without a reason in the title (`#issue`, `FIXME`, `flaky`, `reason:`). Fix it or delete it.",
+      skipIfTrue: "`skipIf(true)` is a silent skip. Delete the test or name the reason in the title.",
+      earlyReturn: "This test returns early when a condition fails, so a missing UI/state becomes a pass. Assert the condition; do not skip it."
+    }
+  },
+  createOnce(context) {
+    return {
+      CallExpression(node) {
+        if (!isTestPath(filenameOf(context)))
+          return;
+        const name = calleeName(node.callee);
+        if (name === null)
+          return;
+        const kind = skipKind(name);
+        if (kind === null)
+          return;
+        if (kind === "skipIf") {
+          const first = node.arguments[0];
+          if (first !== undefined && first.type !== "SpreadElement" && isLiteralTrue(first)) {
+            context.report({ node, messageId: "skipIfTrue" });
+            return;
+          }
+        }
+        if (!titleHasReason(node)) {
+          context.report({ node, messageId: "skipWithoutReason" });
+        }
+      },
+      IfStatement(node) {
+        if (!isTestPath(filenameOf(context)))
+          return;
+        if (!insideTestCallback(node))
+          return;
+        if (node.alternate !== null)
+          return;
+        if (!isBareReturn(node.consequent))
+          return;
+        context.report({ node, messageId: "earlyReturn" });
+      }
+    };
+  }
+});
+
+// oxlint/anti-slop/rules/no-source-text-assertions.ts
+import { defineRule as defineRule30 } from "@oxlint/plugins";
+var SOURCE_PROPS = new Set(["innerHTML", "outerHTML", "outerText"]);
+var SOURCE_IDENTIFIERS = new Set([
+  "sourceText",
+  "rawSource",
+  "fileContents",
+  "astSource",
+  "htmlSource"
+]);
+var SOURCE_MATCHERS = new Set(["toHaveHTML", "toMatchHTML"]);
+function propertyName2(node) {
+  if (node.computed) {
+    return node.property.type === "Literal" && typeof node.property.value === "string" ? node.property.value : null;
+  }
+  return node.property.type === "Identifier" ? node.property.name : null;
+}
+function isExpectCall(node) {
+  return node.type === "CallExpression" && node.callee.type === "Identifier" && node.callee.name === "expect";
+}
+function expectArgument(node) {
+  let current = node;
+  while (current !== null && current.type !== "Program") {
+    if (current.type === "CallExpression" && isExpectCall(current)) {
+      const first = current.arguments[0];
+      if (first === undefined || first.type === "SpreadElement")
+        return null;
+      return first;
+    }
+    current = current.parent;
+  }
+  return null;
+}
+function isSourceSubject(node) {
+  if (node.type === "Identifier")
+    return SOURCE_IDENTIFIERS.has(node.name);
+  if (node.type !== "MemberExpression")
+    return false;
+  const name = propertyName2(node);
+  if (name !== null && SOURCE_PROPS.has(name))
+    return true;
+  if (name === "getText")
+    return true;
+  return false;
+}
+var noSourceTextAssertionsRule = defineRule30({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow tests that assert on innerHTML, outerHTML, source dumps, or HTML matchers."
+    },
+    messages: {
+      sourceText: "Do not assert on source/HTML dumps. Query by role/name and assert on behavior, not `innerHTML`/`outerHTML`/`getText()`."
+    }
+  },
+  createOnce(context) {
+    return {
+      CallExpression(node) {
+        if (!isTestPath(filenameOf(context)))
+          return;
+        if (node.callee.type !== "MemberExpression")
+          return;
+        const matcher = propertyName2(node.callee);
+        if (matcher !== null && SOURCE_MATCHERS.has(matcher)) {
+          context.report({ node, messageId: "sourceText" });
+          return;
+        }
+        const argument = expectArgument(node);
+        if (argument !== null && isSourceSubject(argument)) {
+          context.report({ node, messageId: "sourceText" });
+        }
+      },
+      MemberExpression(node) {
+        if (!isTestPath(filenameOf(context)))
+          return;
+        if (!isExpectCall(node.parent))
+          return;
+        if (node.parent.arguments[0] !== node)
+          return;
+        if (isSourceSubject(node)) {
+          context.report({ node, messageId: "sourceText" });
+        }
+      }
+    };
+  }
+});
+
+// oxlint/anti-slop/rules/no-spread-input-in-query-key.ts
+import { defineRule as defineRule31 } from "@oxlint/plugins";
+function propertyName3(node) {
+  if (node.computed) {
+    return node.key.type === "Literal" && typeof node.key.value === "string" ? node.key.value : null;
+  }
+  return node.key.type === "Identifier" ? node.key.name : null;
+}
+function rootIdentifier(node) {
+  if (node.type === "Identifier")
+    return node;
+  if (node.type === "MemberExpression")
+    return rootIdentifier(node.object);
+  if (node.type === "CallExpression" && node.callee.type !== "Super" && node.callee.type !== "V8IntrinsicExpression") {
+    return rootIdentifier(node.callee);
+  }
+  if (node.type === "ChainExpression")
+    return rootIdentifier(node.expression);
+  return null;
+}
+function isKeysFactory(node) {
+  const root = rootIdentifier(node);
+  return root !== null && root.name.endsWith("Keys");
+}
+function isLeakySpread(element) {
+  if (element === null || element.type !== "SpreadElement")
+    return false;
+  return !isKeysFactory(element.argument);
+}
+function arrayHasLeakySpread(node) {
+  return node.elements.some((element) => element !== null && isLeakySpread(element));
+}
+var noSpreadInputInQueryKeyRule = defineRule31({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow `queryKey: [...input]`; spread only `*Keys` factory results and list cache-identity fields explicitly."
+    },
+    messages: {
+      leaky: "Do not spread a caller object into `queryKey`. Spread a `*Keys` factory and list the concrete cache-identity fields."
+    }
+  },
+  createOnce(context) {
+    return {
+      Property(node) {
+        if (propertyName3(node) !== "queryKey")
+          return;
+        if (node.value.type !== "ArrayExpression")
+          return;
+        if (!arrayHasLeakySpread(node.value))
+          return;
+        context.report({ node, messageId: "leaky" });
+      }
+    };
+  }
+});
+
 // oxlint/anti-slop/rules/no-static-set-map.ts
-import { defineRule as defineRule13 } from "@oxlint/plugins";
+import { defineRule as defineRule32 } from "@oxlint/plugins";
 function unwrapExpression2(expression) {
   let current = expression;
   while (current.type === "ParenthesizedExpression" || current.type === "TSAsExpression" || current.type === "TSTypeAssertion" || current.type === "TSNonNullExpression" || current.type === "TSSatisfiesExpression") {
@@ -1158,7 +2241,7 @@ function isStaticMapArgument(node) {
 function collectionName(callee) {
   return callee.type === "Identifier" && (callee.name === "Set" || callee.name === "Map") ? callee.name : null;
 }
-var noStaticSetMapRule = defineRule13({
+var noStaticSetMapRule = defineRule32({
   meta: {
     type: "problem",
     docs: {
@@ -1190,10 +2273,10 @@ var noStaticSetMapRule = defineRule13({
 });
 
 // oxlint/anti-slop/rules/no-string-discriminant.ts
-import { defineRule as defineRule14 } from "@oxlint/plugins";
+import { defineRule as defineRule33 } from "@oxlint/plugins";
 var BOOLEAN_STATE = new Set(["loading", "isLoading", "completed", "success", "hasError"]);
 var STRING_DISCRIMINANT = new Set(["kind", "status"]);
-function propertyName(node) {
+function propertyName4(node) {
   if (node.computed || node.key.type !== "Identifier")
     return null;
   return node.key.name;
@@ -1214,7 +2297,7 @@ function isBoolean(type) {
 function isBareString(type) {
   return unwrapType(type).type === "TSStringKeyword";
 }
-var noStringDiscriminantRule = defineRule14({
+var noStringDiscriminantRule = defineRule33({
   meta: {
     type: "problem",
     docs: {
@@ -1227,7 +2310,7 @@ var noStringDiscriminantRule = defineRule14({
   },
   createOnce(context) {
     const checkProperty = (node) => {
-      const name = propertyName(node);
+      const name = propertyName4(node);
       const type = annotation(node);
       if (name === null || type === null)
         return;
@@ -1246,8 +2329,43 @@ var noStringDiscriminantRule = defineRule14({
   }
 });
 
+// oxlint/anti-slop/rules/no-swallowed-error.ts
+import { defineRule as defineRule34 } from "@oxlint/plugins";
+function isConsoleCall(statement) {
+  if (statement.type !== "ExpressionStatement")
+    return false;
+  const expression = statement.expression;
+  if (expression.type !== "CallExpression")
+    return false;
+  const callee = expression.callee;
+  return callee.type === "MemberExpression" && !callee.computed && callee.object.type === "Identifier" && callee.object.name === "console" && callee.property.type === "Identifier";
+}
+var noSwallowedErrorRule = defineRule34({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow catch clauses whose body only logs to console without rethrowing or returning."
+    },
+    messages: {
+      swallowed: "This catch only logs. Rethrow, return a typed error, or handle a named case — do not swallow."
+    }
+  },
+  createOnce(context) {
+    return {
+      CatchClause(node) {
+        const statements = node.body.body;
+        if (statements.length === 0)
+          return;
+        if (!statements.every((statement) => isConsoleCall(statement)))
+          return;
+        context.report({ node, messageId: "swallowed" });
+      }
+    };
+  }
+});
+
 // oxlint/anti-slop/rules/no-string-id-alias.ts
-import { defineRule as defineRule15 } from "@oxlint/plugins";
+import { defineRule as defineRule35 } from "@oxlint/plugins";
 var ALIAS = /(?:Id|Email|Slug)$/u;
 function unwrapType2(type) {
   let current = type;
@@ -1265,7 +2383,7 @@ function isPrimitiveAlias(type) {
   }
   return false;
 }
-var noStringIdAliasRule = defineRule15({
+var noStringIdAliasRule = defineRule35({
   meta: {
     type: "problem",
     docs: {
@@ -1290,9 +2408,98 @@ var noStringIdAliasRule = defineRule15({
   }
 });
 
+// oxlint/anti-slop/rules/no-swallowed-rejection.ts
+import { defineRule as defineRule36 } from "@oxlint/plugins";
+var ALLOWED_RECEIVERS = new Set([
+  "abort",
+  "arrayBuffer",
+  "blob",
+  "bytes",
+  "cancel",
+  "close",
+  "formData",
+  "json",
+  "text"
+]);
+function isLiteralish(node) {
+  if (node === null)
+    return true;
+  if (node.type === "Literal")
+    return true;
+  if (node.type === "Identifier" && (node.name === "undefined" || node.name === "null"))
+    return true;
+  if (node.type === "ArrayExpression" && node.elements.length === 0)
+    return true;
+  if (node.type === "ObjectExpression" && node.properties.length === 0)
+    return true;
+  if (node.type === "TemplateLiteral" && node.expressions.length === 0 && (node.quasis[0]?.value.cooked ?? "") === "") {
+    return true;
+  }
+  if (node.type === "BlockStatement") {
+    return node.body.length === 0 || node.body.length === 1 && isLiteralish(node.body[0] ?? null);
+  }
+  if (node.type === "ExpressionStatement")
+    return isLiteralish(node.expression);
+  if (node.type === "ReturnStatement")
+    return isLiteralish(node.argument);
+  return false;
+}
+function catchCallbackIsLiteral(node) {
+  if (node.type === "ArrowFunctionExpression") {
+    if (node.body.type !== "BlockStatement")
+      return isLiteralish(node.body);
+    return isLiteralish(node.body);
+  }
+  if (node.type === "FunctionExpression")
+    return isLiteralish(node.body);
+  return false;
+}
+function receiverMethod(callee) {
+  const object = callee.object;
+  if (object.type !== "CallExpression")
+    return null;
+  if (object.callee.type !== "MemberExpression")
+    return null;
+  const property = object.callee.property;
+  if (object.callee.computed) {
+    return property.type === "Literal" && typeof property.value === "string" ? property.value : null;
+  }
+  return property.type === "Identifier" ? property.name : null;
+}
+var noSwallowedRejectionRule = defineRule36({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow `.catch(() => <literal>)` except on body-read and teardown methods."
+    },
+    messages: {
+      swallowed: "This `.catch` turns a rejection into an empty success. Handle the error, or use a named empty-body allowlist (json/text/cancel/close)."
+    }
+  },
+  createOnce(context) {
+    return {
+      CallExpression(node) {
+        if (node.callee.type !== "MemberExpression" || node.callee.computed)
+          return;
+        if (node.callee.property.type !== "Identifier" || node.callee.property.name !== "catch")
+          return;
+        const callback = node.arguments[0];
+        if (callback === undefined || callback.type === "SpreadElement")
+          return;
+        if (!catchCallbackIsLiteral(callback))
+          return;
+        const method = receiverMethod(node.callee);
+        if (method !== null && ALLOWED_RECEIVERS.has(method))
+          return;
+        context.report({ node, messageId: "swallowed" });
+      }
+    };
+  }
+});
+
 // oxlint/anti-slop/rules/no-tiny-functions.ts
-import { defineRule as defineRule16 } from "@oxlint/plugins";
-function isFunctionNode(node) {
+import { defineRule as defineRule37 } from "@oxlint/plugins";
+function isFunctionNode2(node) {
   return node.type === "ArrowFunctionExpression" || node.type === "FunctionDeclaration" || node.type === "FunctionExpression";
 }
 function unwrapParenthesizedAncestor(node) {
@@ -1376,7 +2583,7 @@ function functionName2(node) {
 function isNamedContract(name) {
   return name !== null && /^(?:is|has|assert|as|to|from)[A-Z]/.test(name);
 }
-var noTinyFunctionsRule = defineRule16({
+var noTinyFunctionsRule = defineRule37({
   meta: {
     type: "problem",
     docs: {
@@ -1388,7 +2595,7 @@ var noTinyFunctionsRule = defineRule16({
   },
   createOnce(context) {
     const check = (node) => {
-      if (!isFunctionNode(node) || !isTinyBody(node))
+      if (!isFunctionNode2(node) || !isTinyBody(node))
         return;
       if (isExported(node) || isTypeGuard(node) || isMethod(node) || isCallback(node))
         return;
@@ -1405,13 +2612,13 @@ var noTinyFunctionsRule = defineRule16({
 });
 
 // oxlint/anti-slop/rules/no-typescript-enum.ts
-import { defineRule as defineRule17 } from "@oxlint/plugins";
+import { defineRule as defineRule38 } from "@oxlint/plugins";
 function importedName2(node) {
   if (node.type !== "ImportSpecifier")
     return null;
   return node.imported.type === "Identifier" ? node.imported.name : String(node.imported.value);
 }
-var noTypescriptEnumRule = defineRule17({
+var noTypescriptEnumRule = defineRule38({
   meta: {
     type: "problem",
     docs: {
@@ -1457,8 +2664,65 @@ var noTypescriptEnumRule = defineRule17({
   }
 });
 
+// oxlint/anti-slop/rules/no-ui-presence-tests.ts
+import { defineRule as defineRule39 } from "@oxlint/plugins";
+var PRESENCE_MATCHERS = new Set(["toBeInTheDocument", "toBeVisible", "toBeEmptyDOMElement"]);
+function propertyName5(node) {
+  if (node.computed) {
+    return node.property.type === "Literal" && typeof node.property.value === "string" ? node.property.value : null;
+  }
+  return node.property.type === "Identifier" ? node.property.name : null;
+}
+function chainRoot(node) {
+  let current = node;
+  while (current.type === "MemberExpression")
+    current = current.object;
+  while (current.type === "CallExpression") {
+    if (current.callee.type === "MemberExpression") {
+      current = current.callee.object;
+      continue;
+    }
+    break;
+  }
+  return current;
+}
+function isExpectCall2(node) {
+  return node.type === "CallExpression" && node.callee.type === "Identifier" && node.callee.name === "expect";
+}
+var noUiPresenceTestsRule = defineRule39({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow Testing Library presence matchers (`toBeInTheDocument`, `toBeVisible`) as the assertion."
+    },
+    messages: {
+      presence: "`{{matcher}}` only proves presence. Assert on the text, value, or action the user cares about."
+    }
+  },
+  createOnce(context) {
+    return {
+      CallExpression(node) {
+        if (!isTestPath(filenameOf(context)))
+          return;
+        if (node.callee.type !== "MemberExpression")
+          return;
+        const matcher = propertyName5(node.callee);
+        if (matcher === null || !PRESENCE_MATCHERS.has(matcher))
+          return;
+        if (!isExpectCall2(chainRoot(node.callee.object)))
+          return;
+        context.report({
+          node,
+          messageId: "presence",
+          data: { matcher }
+        });
+      }
+    };
+  }
+});
+
 // oxlint/anti-slop/rules/no-unknown-parameters.ts
-import { defineRule as defineRule18 } from "@oxlint/plugins";
+import { defineRule as defineRule40 } from "@oxlint/plugins";
 function parameterAnnotation2(parameter) {
   if (parameter.type === "TSParameterProperty") {
     return parameterAnnotation2(parameter.parameter);
@@ -1498,7 +2762,7 @@ function isTypeGuard2(node) {
   }
   return false;
 }
-var noUnknownParametersRule = defineRule18({
+var noUnknownParametersRule = defineRule40({
   meta: {
     type: "problem",
     docs: {
@@ -1542,7 +2806,7 @@ var noUnknownParametersRule = defineRule18({
 });
 
 // oxlint/anti-slop/rules/no-unknown-returns.ts
-import { defineRule as defineRule19 } from "@oxlint/plugins";
+import { defineRule as defineRule41 } from "@oxlint/plugins";
 function referencedAliasName(type) {
   if (type.type === "TSParenthesizedType")
     return referencedAliasName(type.typeAnnotation);
@@ -1550,7 +2814,7 @@ function referencedAliasName(type) {
     return null;
   return type.typeArguments === null || type.typeArguments === undefined || type.typeArguments.params.length === 0 ? type.typeName.name : null;
 }
-var noUnknownReturnsRule = defineRule19({
+var noUnknownReturnsRule = defineRule41({
   meta: {
     type: "problem",
     docs: {
@@ -1620,7 +2884,7 @@ var noUnknownReturnsRule = defineRule19({
 });
 
 // oxlint/anti-slop/rules/no-unknown-type-aliases.ts
-import { defineRule as defineRule20 } from "@oxlint/plugins";
+import { defineRule as defineRule42 } from "@oxlint/plugins";
 function referencedAliasName2(type) {
   if (type.type === "TSParenthesizedType")
     return referencedAliasName2(type.typeAnnotation);
@@ -1628,7 +2892,7 @@ function referencedAliasName2(type) {
     return null;
   return type.typeArguments === null || type.typeArguments === undefined || type.typeArguments.params.length === 0 ? type.typeName.name : null;
 }
-var noUnknownTypeAliasesRule = defineRule20({
+var noUnknownTypeAliasesRule = defineRule42({
   meta: {
     type: "problem",
     docs: {
@@ -1680,7 +2944,7 @@ var noUnknownTypeAliasesRule = defineRule20({
 });
 
 // oxlint/anti-slop/rules/no-unsafe-dictionary-type.ts
-import { defineRule as defineRule21 } from "@oxlint/plugins";
+import { defineRule as defineRule43 } from "@oxlint/plugins";
 var typeNodeKinds = new Set([
   "JSDocNonNullableType",
   "JSDocNullableType",
@@ -1754,7 +3018,7 @@ function shouldReportType(node, environment) {
   }
   return true;
 }
-var noUnsafeDictionaryTypeRule = defineRule21({
+var noUnsafeDictionaryTypeRule = defineRule43({
   meta: {
     type: "problem",
     docs: {
@@ -1795,9 +3059,206 @@ var noUnsafeDictionaryTypeRule = defineRule21({
   }
 });
 
+// oxlint/anti-slop/rules/no-unsafe-inner-html.ts
+import { defineRule as defineRule44 } from "@oxlint/plugins";
+var SAFE_HTML = /^\s*safe-html:/u;
+function isStaticHtml(node) {
+  if (node.type === "Literal" && typeof node.value === "string")
+    return true;
+  if (node.type === "TemplateLiteral")
+    return node.expressions.every(isStaticHtml);
+  return false;
+}
+function hasSafeHtmlComment(sourceCode, node) {
+  return sourceCode.getCommentsBefore(node).some((comment) => SAFE_HTML.test(comment.value));
+}
+function propertyName6(key, computed) {
+  if (computed)
+    return key.type === "Literal" && typeof key.value === "string" ? key.value : null;
+  return key.type === "Identifier" ? key.name : null;
+}
+function isInnerHtmlLhs(node) {
+  if (node.type !== "MemberExpression")
+    return false;
+  const name = node.computed ? node.property.type === "Literal" && node.property.value === "innerHTML" : node.property.type === "Identifier" && node.property.name === "innerHTML";
+  return name === true;
+}
+var noUnsafeInnerHtmlRule = defineRule44({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow dynamic HTML sinks unless the value is a static string or annotated `// safe-html:`."
+    },
+    messages: {
+      unsafe: "Dynamic HTML needs a `// safe-html:` comment on the line above naming the sanitizer. Function names are not proof."
+    }
+  },
+  createOnce(context) {
+    return {
+      AssignmentExpression(node) {
+        if (!isInnerHtmlLhs(node.left))
+          return;
+        if (isStaticHtml(node.right))
+          return;
+        if (hasSafeHtmlComment(context.sourceCode, node))
+          return;
+        context.report({ node, messageId: "unsafe" });
+      },
+      Property(node) {
+        if (propertyName6(node.key, node.computed) !== "__html")
+          return;
+        if (node.parent.type !== "ObjectExpression")
+          return;
+        if (node.value.type === "AssignmentPattern" || node.value.type === "RestElement")
+          return;
+        if (isStaticHtml(node.value))
+          return;
+        if (hasSafeHtmlComment(context.sourceCode, node))
+          return;
+        context.report({ node, messageId: "unsafe" });
+      }
+    };
+  }
+});
+
+// oxlint/anti-slop/rules/no-untranslated-jsx-literal.ts
+import { defineRule as defineRule45 } from "@oxlint/plugins";
+var DEFAULT_IGNORED = new Set(["code", "kbd", "pre", "samp", "script", "style", "var"]);
+var DEFAULT_ALLOWED2 = new Set([
+  "AI",
+  "API",
+  "AWS",
+  "CSV",
+  "DOCX",
+  "HTML",
+  "HTTP",
+  "HTTPS",
+  "ID",
+  "IDs",
+  "JSON",
+  "MCP",
+  "OAuth",
+  "PDF",
+  "S3",
+  "SQL",
+  "URL",
+  "URLs",
+  "UTC",
+  "XML"
+]);
+var HAS_LETTER = /\p{L}/u;
+var HTML_ENTITY = /&(?:[a-zA-Z][a-zA-Z0-9]+|#\d+|#x[\dA-Fa-f]+);/gu;
+var CONSTANT_LIKE = /^(?=.*[0-9_./+-])[A-Z0-9_./+-]{2,}$/u;
+function normalizeText(value) {
+  return value.replace(HTML_ENTITY, " ").replace(/\u00a0/gu, " ").replace(/\s+/gu, " ").trim();
+}
+function reportText(value) {
+  return value.length > 40 ? `${value.slice(0, 37)}...` : value;
+}
+function jsxName(node) {
+  if (node.type === "JSXIdentifier")
+    return node.name;
+  if (node.type === "JSXMemberExpression")
+    return jsxName(node.property);
+  if (node.type === "JSXNamespacedName")
+    return jsxName(node.name);
+  return null;
+}
+function hasIgnoredAncestor(node, ignored) {
+  let current = node.parent;
+  while (current !== null && current.type !== "Program") {
+    if (current.type === "JSXElement") {
+      const name = jsxName(current.openingElement.name);
+      if (name !== null && ignored.has(name))
+        return true;
+    }
+    current = current.parent;
+  }
+  return false;
+}
+function stringLiteralValue(node) {
+  if (node.type === "Literal" && typeof node.value === "string")
+    return node.value;
+  if (node.type !== "TemplateLiteral" || node.expressions.length > 0)
+    return null;
+  return node.quasis[0]?.value.cooked ?? node.quasis[0]?.value.raw ?? null;
+}
+function shouldIgnore(text, extraAllowed) {
+  if (text.length <= 1)
+    return true;
+  if (!HAS_LETTER.test(text))
+    return true;
+  if (DEFAULT_ALLOWED2.has(text) || extraAllowed.has(text))
+    return true;
+  if (CONSTANT_LIKE.test(text) && text.length <= 12)
+    return true;
+  return false;
+}
+function extraStrings(options, key) {
+  if (typeof options !== "object" || options === null || Array.isArray(options))
+    return [];
+  const value = options[key];
+  return Array.isArray(value) ? value.filter((entry) => typeof entry === "string") : [];
+}
+var noUntranslatedJsxLiteralRule = defineRule45({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow user-facing JSX text literals; wrap copy in the project's translation helper."
+    },
+    messages: {
+      untranslated: "Translate JSX text `{{text}}` with `t(...)` / `useTranslations()`, or disable with a reason for non-user copy."
+    },
+    schema: [
+      {
+        type: "object",
+        properties: {
+          allowedText: { type: "array", items: { type: "string" } },
+          ignoredElementNames: { type: "array", items: { type: "string" } }
+        },
+        additionalProperties: false
+      }
+    ]
+  },
+  createOnce(context) {
+    const ignored = new Set(DEFAULT_IGNORED);
+    const extraAllowed = new Set;
+    const check = (node, raw) => {
+      const text = normalizeText(raw);
+      if (shouldIgnore(text, extraAllowed))
+        return;
+      if (hasIgnoredAncestor(node, ignored))
+        return;
+      context.report({ node, messageId: "untranslated", data: { text: reportText(text) } });
+    };
+    return {
+      before() {
+        for (const name of extraStrings(context.options?.[0], "ignoredElementNames")) {
+          ignored.add(name);
+        }
+        for (const text of extraStrings(context.options?.[0], "allowedText")) {
+          extraAllowed.add(text);
+        }
+      },
+      JSXText(node) {
+        if (typeof node.value === "string")
+          check(node, node.value);
+      },
+      JSXExpressionContainer(node) {
+        const parent = node.parent;
+        if (parent.type !== "JSXElement" && parent.type !== "JSXFragment")
+          return;
+        const value = stringLiteralValue(node.expression);
+        if (value !== null)
+          check(node, value);
+      }
+    };
+  }
+});
+
 // oxlint/anti-slop/rules/no-unused-catch-binding.ts
-import { defineRule as defineRule22 } from "@oxlint/plugins";
-var noUnusedCatchBindingRule = defineRule22({
+import { defineRule as defineRule46 } from "@oxlint/plugins";
+var noUnusedCatchBindingRule = defineRule46({
   meta: {
     type: "problem",
     docs: {
@@ -1821,8 +3282,58 @@ var noUnusedCatchBindingRule = defineRule22({
   }
 });
 
+// oxlint/anti-slop/rules/no-vacuous-throw-assertion.ts
+import { defineRule as defineRule47 } from "@oxlint/plugins";
+var THROW_MATCHERS = new Set(["toThrow", "toThrowError"]);
+function propertyName7(node) {
+  if (node.computed || node.property.type !== "Identifier")
+    return null;
+  return node.property.name;
+}
+function describeChain(start) {
+  let current = start;
+  let negated = false;
+  while (current.type === "MemberExpression") {
+    if (propertyName7(current) === "not")
+      negated = true;
+    current = current.object;
+  }
+  const rootedAtExpect = current.type === "CallExpression" && current.callee.type === "Identifier" && current.callee.name === "expect";
+  return { negated, rootedAtExpect };
+}
+var noVacuousThrowAssertionRule = defineRule47({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow `expect(...).toThrow()` with no argument; name the error so an unrelated throw fails the test."
+    },
+    messages: {
+      vacuousThrow: "`{{matcher}}()` with no argument passes for any thrown value. Name the expected error (message, regex, class, or `{ message }`)."
+    }
+  },
+  createOnce(context) {
+    return {
+      CallExpression(node) {
+        if (!isTestPath(filenameOf(context)))
+          return;
+        if (node.arguments.length > 0)
+          return;
+        if (node.callee.type !== "MemberExpression")
+          return;
+        const matcher = propertyName7(node.callee);
+        if (matcher === null || !THROW_MATCHERS.has(matcher))
+          return;
+        const { negated, rootedAtExpect } = describeChain(node.callee.object);
+        if (negated || !rootedAtExpect)
+          return;
+        context.report({ node, messageId: "vacuousThrow", data: { matcher } });
+      }
+    };
+  }
+});
+
 // oxlint/anti-slop/rules/no-widen-then-assert.ts
-import { defineRule as defineRule23 } from "@oxlint/plugins";
+import { defineRule as defineRule48 } from "@oxlint/plugins";
 var functionBoundaryTypes = new Set([
   "ArrowFunctionExpression",
   "FunctionDeclaration",
@@ -2013,7 +3524,7 @@ function assertionIsNarrower(sourceText, broadKind, evidence, assertedType) {
     return isDefinitelyObjectType(assertedType);
   return isDefinitelyNarrowerRecordType(assertedType);
 }
-var noWidenThenAssertRule = defineRule23({
+var noWidenThenAssertRule = defineRule48({
   meta: {
     type: "problem",
     docs: {
@@ -2048,8 +3559,112 @@ var noWidenThenAssertRule = defineRule23({
   }
 });
 
+// oxlint/anti-slop/rules/no-window-open.ts
+import { defineRule as defineRule49 } from "@oxlint/plugins";
+var HOSTS = new Set(["window", "globalThis", "self"]);
+function isGlobalOpen(sourceCode, callee) {
+  if (callee.type === "Identifier") {
+    return callee.name === "open" && sourceCode.isGlobalReference(callee);
+  }
+  if (callee.type !== "MemberExpression")
+    return false;
+  const property = callee.computed ? callee.property.type === "Literal" && callee.property.value === "open" : callee.property.type === "Identifier" && callee.property.name === "open";
+  if (!property)
+    return false;
+  if (callee.object.type === "Identifier")
+    return HOSTS.has(callee.object.name);
+  if (callee.object.type === "MemberExpression" && !callee.object.computed) {
+    return callee.object.property.type === "Identifier" && callee.object.property.name === "window" && callee.object.object.type === "Identifier" && HOSTS.has(callee.object.object.name);
+  }
+  return false;
+}
+var noWindowOpenRule = defineRule49({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Disallow `window.open` and global `open()`; opener isolation belongs in one helper."
+    },
+    messages: {
+      windowOpen: "Do not call `window.open` / `open()` directly. Use a helper that sets `noopener` and sanitizes the URL."
+    }
+  },
+  createOnce(context) {
+    return {
+      CallExpression(node) {
+        if (node.callee.type === "Super" || node.callee.type === "V8IntrinsicExpression")
+          return;
+        if (isGlobalOpen(context.sourceCode, node.callee)) {
+          context.report({ node, messageId: "windowOpen" });
+        }
+      }
+    };
+  }
+});
+
+// oxlint/anti-slop/rules/require-fetch-timeout.ts
+import { defineRule as defineRule50 } from "@oxlint/plugins";
+function isFetchCallee(callee) {
+  if (callee.type === "Identifier")
+    return callee.name === "fetch";
+  if (callee.type !== "MemberExpression")
+    return false;
+  const property = callee.computed ? callee.property.type === "Literal" && callee.property.value === "fetch" : callee.property.type === "Identifier" && callee.property.name === "fetch";
+  if (!property)
+    return false;
+  if (callee.object.type !== "Identifier")
+    return false;
+  return callee.object.name === "window" || callee.object.name === "globalThis" || callee.object.name === "self";
+}
+function hasSignal(node) {
+  if (node.type !== "ObjectExpression")
+    return true;
+  let sawSpread = false;
+  for (const property of node.properties) {
+    if (property.type === "SpreadElement") {
+      sawSpread = true;
+      continue;
+    }
+    if (property.type !== "Property" || property.computed)
+      continue;
+    if (property.key.type === "Identifier" && property.key.name === "signal")
+      return true;
+    if (property.key.type === "Literal" && property.key.value === "signal")
+      return true;
+  }
+  return sawSpread;
+}
+var requireFetchTimeoutRule = defineRule50({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Require `fetch(url, { signal })` so every request has a timeout or abort."
+    },
+    messages: {
+      noSignal: "`fetch` needs a `signal` (`AbortSignal.timeout(...)` or a controller). A hung peer otherwise stalls this work forever."
+    }
+  },
+  createOnce(context) {
+    return {
+      CallExpression(node) {
+        if (node.callee.type === "Super" || node.callee.type === "V8IntrinsicExpression")
+          return;
+        if (!isFetchCallee(node.callee))
+          return;
+        const options = node.arguments[1];
+        if (options === undefined || options.type === "SpreadElement") {
+          context.report({ node, messageId: "noSignal" });
+          return;
+        }
+        if (options.type === "ObjectExpression" && !hasSignal(options)) {
+          context.report({ node, messageId: "noSignal" });
+        }
+      }
+    };
+  }
+});
+
 // oxlint/anti-slop/rules/require-safety-comment-for-type-assertion.ts
-import { defineRule as defineRule24 } from "@oxlint/plugins";
+import { defineRule as defineRule51 } from "@oxlint/plugins";
 var commentOwnerKinds = new Set([
   "ExpressionStatement",
   "PropertyDefinition",
@@ -2081,7 +3696,7 @@ function hasSafetyComment(sourceCode, node) {
   }
   return false;
 }
-var requireSafetyCommentForTypeAssertionRule = defineRule24({
+var requireSafetyCommentForTypeAssertionRule = defineRule51({
   meta: {
     type: "problem",
     docs: {
@@ -2104,34 +3719,100 @@ var requireSafetyCommentForTypeAssertionRule = defineRule24({
   }
 });
 
+// oxlint/anti-slop/rules/require-suppression-description.ts
+import { defineRule as defineRule52 } from "@oxlint/plugins";
+var DISABLE = /\b(?:eslint|oxlint)-disable(?:-next-line|-line)?\b/u;
+var ENABLE = /\b(?:eslint|oxlint)-enable\b/u;
+var INLINE = /--\s*\S/u;
+function isDirective(text) {
+  return DISABLE.test(text) || ENABLE.test(text);
+}
+var requireSuppressionDescriptionRule = defineRule52({
+  meta: {
+    type: "problem",
+    docs: {
+      description: "Require every `oxlint-disable` / `eslint-disable` directive to include `-- <reason>` or a comment on the line above."
+    },
+    messages: {
+      missing: "Suppression needs a reason: add `-- <why>` on the directive, or a comment on the line above."
+    }
+  },
+  createOnce(context) {
+    return {
+      Program() {
+        const comments = context.sourceCode.getAllComments();
+        for (const comment of comments) {
+          if (!DISABLE.test(comment.value))
+            continue;
+          if (INLINE.test(comment.value))
+            continue;
+          const lineAbove = (comment.loc?.start.line ?? 0) - 1;
+          const documented = comments.some((other) => other !== comment && !isDirective(other.value) && other.loc?.end.line === lineAbove);
+          if (documented)
+            continue;
+          context.report({ node: comment, messageId: "missing" });
+        }
+      }
+    };
+  }
+});
+
 // oxlint/anti-slop/index.ts
 var antiSlopPlugin = eslintCompatPlugin({
   meta: { name: "anti-slop" },
   rules: {
+    "no-async-context-enter-with": noAsyncContextEnterWithRule,
+    "no-banner-comments": noBannerCommentsRule,
+    "no-boolean-if-return": noBooleanIfReturnRule,
     "no-chained-type-assertions": noChainedTypeAssertionsRule,
+    "no-closing-brace-label": noClosingBraceLabelRule,
     "no-conditional-empty-object-spread": noConditionalEmptyObjectSpreadRule,
+    "no-document-cookie": noDocumentCookieRule,
+    "no-eager-singleton": noEagerSingletonRule,
+    "no-empty-if-chain": noEmptyIfChainRule,
+    "no-foreign-directive": noForeignDirectiveRule,
+    "no-icu-invalid-locale": noIcuInvalidLocaleRule,
+    "no-icu-missing-other": noIcuMissingOtherRule,
     "no-inline-cast-access": noInlineCastAccessRule,
     "no-known-value-widening": noKnownValueWideningRule,
+    "no-long-comments": noLongCommentsRule,
     "no-module-mocking": noModuleMockingRule,
     "no-new-promise": noNewPromiseRule,
     "no-object-parameters": noObjectParametersRule,
+    "no-partial-record-satisfies": noPartialRecordSatisfiesRule,
+    "no-path-prefix-containment": noPathPrefixContainmentRule,
+    "no-physical-properties": noPhysicalPropertiesRule,
+    "no-placeholder-comment": noPlaceholderCommentRule,
+    "no-process-env-outside-boundary": noProcessEnvOutsideBoundaryRule,
     "no-reflect-apply": noReflectApplyRule,
     "no-reflect-get": noReflectGetRule,
     "no-return-type-utility": noReturnTypeUtilityRule,
     "no-runtime-typeof": noRuntimeTypeofRule,
+    "no-silent-skip": noSilentSkipRule,
+    "no-source-text-assertions": noSourceTextAssertionsRule,
+    "no-spread-input-in-query-key": noSpreadInputInQueryKeyRule,
     "no-static-set-map": noStaticSetMapRule,
     "no-string-discriminant": noStringDiscriminantRule,
+    "no-swallowed-error": noSwallowedErrorRule,
     "no-string-id-alias": noStringIdAliasRule,
+    "no-swallowed-rejection": noSwallowedRejectionRule,
     "no-tiny-functions": noTinyFunctionsRule,
     "no-typescript-enum": noTypescriptEnumRule,
+    "no-ui-presence-tests": noUiPresenceTestsRule,
     "no-unused-catch-binding": noUnusedCatchBindingRule,
     "no-unsafe-dictionary-type": noUnsafeDictionaryTypeRule,
+    "no-unsafe-inner-html": noUnsafeInnerHtmlRule,
+    "no-untranslated-jsx-literal": noUntranslatedJsxLiteralRule,
     "no-shape-in-symbol-names": noForbiddenTermInSymbolNamesRule,
     "no-unknown-parameters": noUnknownParametersRule,
     "no-unknown-returns": noUnknownReturnsRule,
     "no-unknown-type-aliases": noUnknownTypeAliasesRule,
+    "no-vacuous-throw-assertion": noVacuousThrowAssertionRule,
     "no-widen-then-assert": noWidenThenAssertRule,
-    "require-safety-comment-for-type-assertion": requireSafetyCommentForTypeAssertionRule
+    "no-window-open": noWindowOpenRule,
+    "require-fetch-timeout": requireFetchTimeoutRule,
+    "require-safety-comment-for-type-assertion": requireSafetyCommentForTypeAssertionRule,
+    "require-suppression-description": requireSuppressionDescriptionRule
   }
 });
 var anti_slop_default = antiSlopPlugin;

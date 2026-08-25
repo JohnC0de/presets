@@ -1,25 +1,26 @@
 #!/usr/bin/env bun
-/**
- * Copy configs that cannot `extends` into the project root.
- *
- *   bunx presets-sync
- *   bunx presets-sync --force
- *   bunx presets-sync --oxfmt --anti-slop --no-dotfiles
- *   bunx presets-sync --all --force
- *
- * Defaults: write .editorconfig + .gitattributes (skip if already present).
- * --oxfmt also writes .oxfmtrc.json from the house style (oxfmt has no extends).
- * --anti-slop copies oxlint/anti-slop → tools/oxlint/anti-slop (Node cannot load
- *   TypeScript plugins from node_modules type-stripping restrictions).
- * --force overwrites existing files.
- */
+/** Copy configs that cannot `extends` into the project root. See --help flags below. */
 import { copyFileSync, cpSync, existsSync, readFileSync } from "node:fs"
-import { dirname, join, resolve } from "node:path"
-import { fileURLToPath } from "node:url"
+import path from "node:path"
 
-const __dirname = dirname(fileURLToPath(import.meta.url))
-const pkgRoot = resolve(__dirname, "..")
+type Copy = { readonly from: string; readonly to: string }
+type PackageJson = { readonly peerDependencies: Record<string, string> }
+
+function isPackageJson(value: unknown): value is PackageJson {
+  if (typeof value !== "object" || value === null) return false
+  if (!("peerDependencies" in value)) return false
+  const peers = value.peerDependencies
+  return typeof peers === "object" && peers !== null
+}
+
+const pkgRoot = path.resolve(import.meta.dirname, "..")
 const cwd = process.cwd()
+const parsed: unknown = JSON.parse(readFileSync(path.join(pkgRoot, "package.json"), "utf8"))
+if (!isPackageJson(parsed)) {
+  console.error("package.json is missing peerDependencies")
+  process.exit(2)
+}
+const packageJson = parsed
 
 const args = new Set(process.argv.slice(2))
 const force = args.has("--force")
@@ -28,7 +29,7 @@ const wantAntiSlop = args.has("--anti-slop")
 const skipDotfiles = args.has("--no-dotfiles")
 const wantAll = args.has("--all")
 
-const copies = []
+const copies: Copy[] = []
 if (!skipDotfiles || wantAll) {
   copies.push(
     { from: "editorconfig.ini", to: ".editorconfig" },
@@ -39,7 +40,7 @@ if (wantOxfmt || wantAll) {
   copies.push({ from: "oxfmtrc.json", to: ".oxfmtrc.json" })
 }
 
-const dirCopies = []
+const dirCopies: Copy[] = []
 if (wantAntiSlop || wantAll) {
   dirCopies.push({ from: "oxlint/anti-slop", to: "tools/oxlint/anti-slop" })
 }
@@ -49,39 +50,36 @@ if (copies.length === 0 && dirCopies.length === 0) {
   process.exit(2)
 }
 
-const written = []
-const skipped = []
-for (const { from, to } of copies) {
-  const src = join(pkgRoot, from)
-  const dest = join(cwd, to)
-  if (!existsSync(src)) {
-    console.error(`missing package file: ${from}`)
-    process.exit(2)
+const written: string[] = []
+const skipped: string[] = []
+
+function applyCopies(
+  items: readonly Copy[],
+  missingLabel: string,
+  write: (src: string, dest: string) => void,
+): void {
+  for (const { from, to } of items) {
+    const src = path.join(pkgRoot, from)
+    const dest = path.join(cwd, to)
+    if (!existsSync(src)) {
+      console.error(`missing package ${missingLabel}: ${from}`)
+      process.exit(2)
+    }
+    if (existsSync(dest) && !force) {
+      skipped.push(to)
+      continue
+    }
+    write(src, dest)
+    written.push(to)
   }
-  if (existsSync(dest) && !force) {
-    skipped.push(to)
-    continue
-  }
-  copyFileSync(src, dest)
-  written.push(to)
 }
 
-for (const { from, to } of dirCopies) {
-  const src = join(pkgRoot, from)
-  const dest = join(cwd, to)
-  if (!existsSync(src)) {
-    console.error(`missing package directory: ${from}`)
-    process.exit(2)
-  }
-  if (existsSync(dest) && !force) {
-    skipped.push(to)
-    continue
-  }
+applyCopies(copies, "file", copyFileSync)
+applyCopies(dirCopies, "directory", (src: string, dest: string): void => {
   cpSync(src, dest, { recursive: true, force: true })
-  written.push(to)
-}
+})
 
-console.log(
+console.info(
   JSON.stringify(
     {
       package: pkgRoot,
@@ -109,7 +107,7 @@ if (args.has("--print-recipe")) {
       sync: "bunx presets-sync --anti-slop --force",
     },
     fallow: { extends: ["./node_modules/@john/presets/fallow.base.json"] },
-    versions: JSON.parse(readFileSync(join(pkgRoot, "package.json"), "utf8")).peerDependencies,
+    versions: packageJson.peerDependencies,
   }
-  console.log(JSON.stringify(recipe, null, 2))
+  console.info(JSON.stringify(recipe, null, 2))
 }

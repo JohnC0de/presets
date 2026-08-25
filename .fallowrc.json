@@ -1,0 +1,13 @@
+{
+  "$schema": "./node_modules/fallow/schema.json",
+  "extends": ["./fallow.base.json"],
+  "entry": ["oxlint/anti-slop/index.ts", "bin/presets-sync.ts"],
+  "ignorePatterns": ["oxlint/anti-slop/index.mjs"],
+  "ignoreDependencies": ["@oxlint/plugins"],
+  "duplicates": {
+    "ignore": ["oxlint/anti-slop/**"]
+  },
+  "health": {
+    "ignore": ["**/*.{test,spec}.{ts,tsx,js,mjs,cjs}", "scripts/**", "oxlint/anti-slop/**"]
+  }
+}

@@ -1,7 +1,19 @@
 {
   "$schema": "https://raw.githubusercontent.com/oxc-project/oxc/main/npm/oxlint/configuration_schema.json",
   "extends": ["./.oxlintrc.json"],
-  "plugins": ["eslint", "typescript", "unicorn", "oxc", "import", "promise", "react", "jsx-a11y"],
+  "plugins": [
+    "eslint",
+    "typescript",
+    "unicorn",
+    "oxc",
+    "import",
+    "promise",
+    "jest",
+    "vitest",
+    "node",
+    "react",
+    "jsx-a11y"
+  ],
   "env": {
     "builtin": true,
     "browser": true
@@ -21,9 +33,26 @@
     }
   },
   "rules": {
+    "no-underscore-dangle": ["error", { "allow": ["_exhaustive", "_splat"] }],
+    "no-void": "off",
+    "typescript/no-confusing-void-expression": "off",
+
     "react/react-in-jsx-scope": "off",
     "react/rules-of-hooks": "error",
     "react/exhaustive-deps": "error",
+    "react/purity": "error",
+    "react/immutability": "error",
+    "react/set-state-in-effect": "error",
+    "react/set-state-in-render": "error",
+    "react/error-boundaries": "error",
+    "react/refs": "error",
+    "react/jsx-key": "error",
+    "react/jsx-no-undef": "error",
+    "react/jsx-props-no-spread-multi": "error",
+    "react/jsx-no-script-url": "error",
+    "react/no-unstable-nested-components": "error",
+    "react/void-dom-elements-no-children": "error",
+    "react/iframe-missing-sandbox": "error",
     "react/button-has-type": "error",
     "react/jsx-boolean-value": ["error", "never"],
     "react/jsx-curly-brace-presence": ["error", { "props": "never", "children": "never" }],
@@ -60,6 +89,19 @@
     "**/*.gen.ts",
     "src/routeTree.gen.ts",
     "drizzle",
-    "oxlint/anti-slop/**"
+    "oxlint/anti-slop/**",
+    "scripts/**",
+    ".agent/**",
+    ".agents/**",
+    ".claude/**",
+    ".codex/**",
+    ".continue/**",
+    ".cursor/**",
+    ".gemini/**",
+    ".grok/**",
+    ".opencode/**",
+    ".pi/**",
+    ".roo/**",
+    ".windsurf/**"
   ]
 }
