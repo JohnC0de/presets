@@ -1,14 +1,27 @@
 {
   "name": "@john/presets",
-  "version": "1.1.0",
-  "description": "Shared tooling presets for personal projects: TypeScript, oxlint, oxfmt, editorconfig, gitattributes, fallow",
-  "type": "module",
+  "version": "1.2.0",
+  "description": "Shared tooling presets for personal projects: TypeScript, oxlint (+ anti-slop), oxfmt, editorconfig, gitattributes, fallow",
+  "keywords": [
+    "anti-slop",
+    "editorconfig",
+    "fallow",
+    "oxfmt",
+    "oxlint",
+    "presets",
+    "typescript"
+  ],
+  "license": "MIT",
+  "bin": {
+    "presets-sync": "./scripts/sync.mjs"
+  },
   "files": [
     "tsconfig.base.json",
     "tsconfig.bun.json",
     "tsconfig.react.json",
     ".oxlintrc.json",
     "oxlint.react.json",
+    "oxlint/anti-slop",
     "oxfmtrc.json",
     "fallow.base.json",
     "editorconfig.ini",
@@ -16,36 +29,63 @@
     "scripts/sync.mjs",
     "README.md"
   ],
+  "type": "module",
   "exports": {
     "./tsconfig.base.json": "./tsconfig.base.json",
     "./tsconfig.bun.json": "./tsconfig.bun.json",
     "./tsconfig.react.json": "./tsconfig.react.json",
     "./.oxlintrc.json": "./.oxlintrc.json",
     "./oxlint.react.json": "./oxlint.react.json",
+    "./oxlint/anti-slop": "./oxlint/anti-slop/index.ts",
+    "./oxlint/anti-slop/*": "./oxlint/anti-slop/*",
     "./oxfmtrc.json": "./oxfmtrc.json",
     "./fallow.base.json": "./fallow.base.json",
     "./editorconfig.ini": "./editorconfig.ini",
     "./gitattributes.txt": "./gitattributes.txt",
     "./package.json": "./package.json"
   },
-  "bin": {
-    "presets-sync": "./scripts/sync.mjs"
+  "scripts": {
+    "format": "oxfmt .",
+    "format:check": "oxfmt --check .",
+    "lint": "oxlint --type-aware .",
+    "check": "bun run format:check && bun run lint"
+  },
+  "devDependencies": {
+    "@oxlint/plugins": "1.80.0",
+    "oxfmt": "0.65.0",
+    "oxlint": "1.80.0",
+    "oxlint-tsgolint": "7.0.2001",
+    "typescript": "7.0.2"
   },
   "peerDependencies": {
-    "fallow": "3.10.0",
-    "oxfmt": "0.61.0",
-    "oxlint": "1.76.0",
+    "@oxlint/plugins": "1.80.0",
+    "fallow": "3.18.0",
+    "oxfmt": "0.65.0",
+    "oxlint": "1.80.0",
+    "oxlint-tsgolint": "7.0.2001",
     "typescript": "7.0.2"
   },
   "peerDependenciesMeta": {
-    "fallow": { "optional": true },
-    "oxfmt": { "optional": true },
-    "oxlint": { "optional": true },
-    "typescript": { "optional": true }
+    "@oxlint/plugins": {
+      "optional": false
+    },
+    "fallow": {
+      "optional": true
+    },
+    "oxfmt": {
+      "optional": true
+    },
+    "oxlint": {
+      "optional": true
+    },
+    "oxlint-tsgolint": {
+      "optional": true
+    },
+    "typescript": {
+      "optional": true
+    }
   },
   "engines": {
     "bun": ">=1.2.0"
-  },
-  "keywords": ["presets", "oxlint", "oxfmt", "typescript", "fallow", "editorconfig"],
-  "license": "MIT"
+  }
 }

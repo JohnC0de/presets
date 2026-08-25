@@ -1,0 +1,8 @@
+{
+  "name": "@john/oxlint-anti-slop",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts"
+  }
+}

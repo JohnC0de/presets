@@ -1,17 +1,17 @@
 # @john/presets
 
 Shared tooling for personal repos under `projects/personal` (and labs that opt in).
-No build step — the package is just config files + a tiny sync script.
+No build step — the package is config files + anti-slop oxlint plugin + a tiny sync script.
 
-Boviom / work repos stay on their own tooling.
+Boviom / work repos stay on their own tooling (Effect / Tailwind plugins are domain-local).
 
 ## Install
 
 ```sh
 bun add -d github:JohnC0de/presets
-bun add -d oxlint@1.76.0 oxfmt@0.61.0 typescript@7.0.2
+bun add -d oxlint@1.80.0 @oxlint/plugins@1.80.0 oxlint-tsgolint@7.0.2001 oxfmt@0.65.0 typescript@7.0.2
 # optional intelligence gate:
-bun add -d fallow@3.10.0
+bun add -d fallow@3.18.0
 ```
 
 `package.json` pins live in this package's `peerDependencies`. Keep consumer
@@ -23,17 +23,18 @@ versions aligned with those pins.
 
 ## What lives where
 
-| Concern | SSOT file | How consumers attach |
-| --- | --- | --- |
-| TS strict family | `tsconfig.base.json` | `"extends": "@john/presets/tsconfig.base.json"` |
-| TS Bun CLI profile | `tsconfig.bun.json` | `"extends": "@john/presets/tsconfig.bun.json"` |
-| TS React/DOM profile | `tsconfig.react.json` | `"extends": "@john/presets/tsconfig.react.json"` (+ paths/include local) |
-| oxlint base | `.oxlintrc.json` | `"extends": ["./node_modules/@john/presets/.oxlintrc.json"]` |
-| oxlint React | `oxlint.react.json` | `"extends": ["./node_modules/@john/presets/oxlint.react.json"]` |
-| oxfmt house style | `oxfmtrc.json` | **copy** (oxfmt has no `extends` yet) → `.oxfmtrc.json` |
-| fallow defaults | `fallow.base.json` | `"extends": ["./node_modules/@john/presets/fallow.base.json"]` |
-| EditorConfig | `editorconfig.ini` | **copy** → `.editorconfig` |
-| gitattributes | `gitattributes.txt` | **copy** → `.gitattributes` |
+| Concern                       | SSOT file             | How consumers attach                                                     |
+| ----------------------------- | --------------------- | ------------------------------------------------------------------------ |
+| TS strict family              | `tsconfig.base.json`  | `"extends": "@john/presets/tsconfig.base.json"`                          |
+| TS Bun CLI profile            | `tsconfig.bun.json`   | `"extends": "@john/presets/tsconfig.bun.json"`                           |
+| TS React/DOM profile          | `tsconfig.react.json` | `"extends": "@john/presets/tsconfig.react.json"` (+ paths/include local) |
+| oxlint base (max + anti-slop) | `.oxlintrc.json`      | `"extends": ["./node_modules/@john/presets/.oxlintrc.json"]`             |
+| oxlint React                  | `oxlint.react.json`   | `"extends": ["./node_modules/@john/presets/oxlint.react.json"]`          |
+| anti-slop plugin              | `oxlint/anti-slop/`   | wired in base via `jsPlugins` (needs `@oxlint/plugins`)                  |
+| oxfmt house style             | `oxfmtrc.json`        | **copy** (oxfmt has no `extends` yet) → `.oxfmtrc.json`                  |
+| fallow defaults               | `fallow.base.json`    | `"extends": ["./node_modules/@john/presets/fallow.base.json"]`           |
+| EditorConfig                  | `editorconfig.ini`    | **copy** → `.editorconfig`                                               |
+| gitattributes                 | `gitattributes.txt`   | **copy** → `.gitattributes`                                              |
 
 ### Sync the copy-only files
 
@@ -79,7 +80,8 @@ bunx presets-sync --all --force
 
 ```json
 {
-  "extends": ["./node_modules/@john/presets/.oxlintrc.json"]
+  "extends": ["./node_modules/@john/presets/.oxlintrc.json"],
+  "ignorePatterns": ["dist", "node_modules"]
 }
 ```
 
@@ -92,7 +94,31 @@ bunx presets-sync --all --force
 }
 ```
 
-Add framework-only plugins (`nextjs`, …) in the consumer.
+Lint with type-aware (matches the preset `options.typeAware`):
+
+```json
+{
+  "scripts": {
+    "lint": "oxlint --type-aware ."
+  }
+}
+```
+
+Add framework-only plugins (`nextjs`, `oxlint-tailwindcss`, Effect) in the consumer.
+
+If `jsPlugins` from `extends` do not resolve in your oxlint version, redeclare:
+
+```json
+{
+  "extends": ["./node_modules/@john/presets/oxlint.react.json"],
+  "jsPlugins": [
+    {
+      "name": "anti-slop",
+      "specifier": "./node_modules/@john/presets/oxlint/anti-slop/index.ts"
+    }
+  ]
+}
+```
 
 ### oxfmt (house style)
 
@@ -101,25 +127,6 @@ Style: **no semi, double quotes, printWidth 100, trailingComma all, LF.**
 ```sh
 bunx presets-sync --oxfmt --force
 ```
-
-Per-project extras only (ignore globs, Tailwind sort path):
-
-```json
-{
-  "printWidth": 100,
-  "singleQuote": false,
-  "semi": false,
-  "ignorePatterns": ["src/routeTree.gen.ts", "vendor/**"],
-  "sortTailwindcss": {
-    "stylesheet": "./src/styles.css",
-    "functions": ["cn", "clsx"]
-  }
-}
-```
-
-Until oxfmt grows `extends`, any house-style change means re-run
-`presets-sync --oxfmt --force` (or a small local wrapper that spreads the
-JSON from `node_modules/@john/presets/oxfmtrc.json` via `oxfmt.config.ts`).
 
 ### fallow
 
@@ -132,15 +139,13 @@ JSON from `node_modules/@john/presets/oxfmtrc.json` via `oxfmt.config.ts`).
 }
 ```
 
-Boundaries, workspaces, and entry points stay per project — only rules/health/dupes/audit defaults are shared.
-
 ### Suggested `package.json` scripts
 
 ```json
 {
   "scripts": {
     "typecheck": "tsc --noEmit",
-    "lint": "oxlint",
+    "lint": "oxlint --type-aware .",
     "fmt": "oxfmt",
     "fmt:check": "oxfmt --check",
     "fallow": "fallow",
@@ -150,23 +155,35 @@ Boundaries, workspaces, and entry points stay per project — only rules/health/
 }
 ```
 
-Wire `fallow:audit` into `check` only when the repo is clean enough to gate on it.
+## Aggregate sources (v1.2)
+
+| Source                                     | What was taken                                                            |
+| ------------------------------------------ | ------------------------------------------------------------------------- |
+| `godot-mcp`                                | Full anti-slop rule set (24 rules) + error-level severity                 |
+| `personal/os` / `modelport` / `sketch-lab` | Shared anti-slop core + `allowInTypeGuards` on `no-runtime-typeof`        |
+| `boviom/app`                               | Broad eslint / unicorn / oxc bug-catchers (not Tailwind / react-perf)     |
+| `deepseek-harness`                         | Type-aware TypeScript strict family (`no-unsafe-*`, floating promises, …) |
+| prior `@john/presets`                      | TS configs, oxfmt house style, fallow base, sync script                   |
+
+**Not in presets (domain-local):** `oxlint-tailwindcss`, `@mpsuesser/oxlint-plugin-effect`, Ultracite/Effect stacks.
 
 ## Version pins (receipt)
 
-| Tool | Pin (peer) |
-| --- | --- |
-| oxlint | 1.76.0 |
-| oxfmt | 0.61.0 |
-| typescript | 7.0.2 |
-| fallow | 3.10.0 |
+| Tool            | Pin (peer) |
+| --------------- | ---------- |
+| oxlint          | 1.80.0     |
+| @oxlint/plugins | 1.80.0     |
+| oxlint-tsgolint | 7.0.2001   |
+| oxfmt           | 0.65.0     |
+| typescript      | 7.0.2      |
+| fallow          | 3.18.0     |
 
 Bump here first, then bump consumers. Do not leave caret ranges that drift per repo.
 
 ## What is deliberately local
 
 - `paths` / monorepo project references
-- framework plugins (Next, Effect ultracite, …)
+- framework plugins (Next, Tailwind, Effect)
 - fallow `entry`, `boundaries`, `workspaces`
 - generated-file ignore globs
 - Tailwind stylesheet path for `sortTailwindcss`
