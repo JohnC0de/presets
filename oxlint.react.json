@@ -61,6 +61,9 @@
     "react/no-array-index-key": "error",
     "react/no-danger": "error",
     "react/no-unknown-property": "error",
+    "react/jsx-no-target-blank": "error",
+
+    "anti-slop/no-physical-properties": "error",
 
     "jsx-a11y/alt-text": "error",
     "jsx-a11y/anchor-has-content": "error",

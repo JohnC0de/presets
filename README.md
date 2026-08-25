@@ -180,25 +180,29 @@ This package's own `bun run check` runs format + type-aware lint + `tsc` + `fall
 The anti-slop plugin sources are oxlint-ignored (AST walkers trip the rules they implement);
 fallow still covers them.
 
-## Aggregate sources (v1.5)
+## Aggregate sources (v1.6)
 
-| Source                                   | What was taken                                                                                                 |
-| ---------------------------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `godot-mcp`                              | Full anti-slop type-hygiene set + error-level severity                                                         |
-| `dmmulroy/anti-slop`                     | 15 generic rules (already vendored) + agent-dir ignores in oxlint/oxfmt/fallow                                 |
-| image-2 extras                           | `no-long-comments`, `no-silent-skip`, `no-source-text-assertions`, `no-ui-presence-tests`                      |
-| `stella/stella` `.oxlint-plugins`        | Generic security/test/i18n/env guards (not Stella-named product rules)                                         |
-| `eloqnt/cli` lint-rules                  | Source-side ICU analogs (`no-icu-missing-other`, `no-icu-invalid-locale`); catalog lint stays eloqnt           |
-| `thermo-nuclear`                         | `max-lines` 1000, `max-depth` 4, `no-else-return`, `no-nested-ternary`, `no-await-in-loop`                     |
-| `code-slop` (asyrafhussin)               | `no-placeholder-comment`, `no-closing-brace-label`, `no-boolean-if-return`, `no-swallowed-error`               |
-| `desloppify`                             | `no-empty-if-chain`; swallowed-error (catch that only logs)                                                    |
-| `deslop` (brianlovin / poteto / davila7) | `no-banner-comments`; `no-unneeded-ternary`; early-return via `no-else-return`                                 |
-| `boviom/app`                             | eslint / unicorn / oxc bug-catchers + `oxc/no-async-endpoint-handlers`                                         |
-| `deepseek-harness`                       | Type-aware TS (`switch-exhaustiveness-check`, `only-throw-error`, `no-unsafe-type-assertion`)                  |
-| oxlint 1.80 native                       | jest/vitest `expect-expect`, node path/require, React Compiler rules; `perf`/`restriction`/`pedantic` as error |
-| prior `@john/presets`                    | TS configs, oxfmt house style, fallow base, sync script                                                        |
+| Source                                   | What was taken                                                                                                                                                          |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `godot-mcp`                              | Full anti-slop type-hygiene set + error-level severity                                                                                                                  |
+| `dmmulroy/anti-slop`                     | 15 generic rules (already vendored) + agent-dir ignores in oxlint/oxfmt/fallow                                                                                          |
+| image-2 extras                           | `no-long-comments`, `no-silent-skip`, `no-source-text-assertions`, `no-ui-presence-tests`                                                                               |
+| `stella/stella` `.oxlint-plugins`        | Generic security/test/i18n/env guards (not Stella-named product rules)                                                                                                  |
+| `eloqnt/cli` lint-rules                  | Source-side ICU analogs (`no-icu-missing-other`, `no-icu-invalid-locale`); catalog lint stays eloqnt                                                                    |
+| `thermo-nuclear`                         | `max-lines` 1000, `max-depth` 4, `no-else-return`, `no-nested-ternary`, `no-await-in-loop`                                                                              |
+| `code-slop` (asyrafhussin)               | `no-placeholder-comment`, `no-closing-brace-label`, `no-boolean-if-return`, `no-swallowed-error`                                                                        |
+| `desloppify`                             | `no-empty-if-chain`; swallowed-error (catch that only logs)                                                                                                             |
+| `deslop` (brianlovin / poteto / davila7) | `no-banner-comments`; `no-unneeded-ternary`; early-return via `no-else-return`                                                                                          |
+| `boviom/app`                             | eslint / unicorn / oxc bug-catchers + `oxc/no-async-endpoint-handlers`                                                                                                  |
+| `deepseek-harness`                       | Type-aware TS (`switch-exhaustiveness-check`, `only-throw-error`, `no-unsafe-type-assertion`)                                                                           |
+| oxlint 1.80 native                       | jest/vitest `expect-expect`, node path/require, React Compiler rules. Categories: `correctness`/`suspicious`/`perf` as error; never `restriction`/`pedantic` as a whole |
+| prior `@john/presets`                    | TS configs, oxfmt house style, fallow base, sync script                                                                                                                 |
 
 Catalog-only eloqnt rules (`duplicate-id`, `inconsistent-args`, `orphan-message`, `missing-translation`, `structure-mismatch`, `superfluous-key`, `undefined-key`, `unreachable-plural-case`, `inconsistent-exact-plurals`) need message JSON + `srcPath`. They do not run as oxlint JS plugins. Use [eloqnt lint](https://cli.eloqnt.dev/docs/cli/lint) in apps that have catalogs.
+
+`anti-slop/no-untranslated-jsx-literal` is **off**. Turn it on in apps that actually have `t()` / catalogs. `anti-slop/no-physical-properties` is off in the base preset and **error** in `oxlint.react.json`.
+
+Restriction as a category is a syntax-era denylist (`no-optional-chaining`, `no-async-await`, `jsx-filename-extension`). Pedantic as a category is ceremony (`explicit-function-return-type`, `prefer-readonly-parameter-types`). Both stay off; high-signal members are listed under `rules` (`no-fallthrough`, `typescript/no-unsafe-*`, `no-floating-promises`).
 
 **Not in presets (domain-local):** `oxlint-tailwindcss`, `@mpsuesser/oxlint-plugin-effect`, Ultracite/Effect, nextjs, jsdoc-require, react-perf, `@stylistic`. Stella product rules (auth-lifecycle, matter glyphs, folio layers, MCP OAuth) stay out.
 
