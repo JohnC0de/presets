@@ -46,8 +46,8 @@
   },
   "scripts": {
     "build:anti-slop": "bun build ./oxlint/anti-slop/index.ts --outfile=oxlint/anti-slop/index.mjs --target=node --format=esm --packages=external",
-    "format": "oxfmt .",
-    "format:check": "oxfmt --check .",
+    "format": "oxfmt --config oxfmtrc.json .",
+    "format:check": "oxfmt --check --config oxfmtrc.json .",
     "lint": "oxlint --type-aware .",
     "check": "bun run build:anti-slop && bun run format:check && bun run lint"
   },
