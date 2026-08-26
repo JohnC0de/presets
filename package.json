@@ -1,6 +1,6 @@
 {
   "name": "@john/presets",
-  "version": "1.6.0",
+  "version": "1.7.0",
   "description": "Shared tooling presets for personal projects: TypeScript, oxlint (+ anti-slop), oxfmt, editorconfig, gitattributes, fallow",
   "keywords": [
     "anti-slop",

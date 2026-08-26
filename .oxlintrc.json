@@ -62,6 +62,7 @@
     "max-lines": ["error", { "max": 1000, "skipBlankLines": true, "skipComments": true }],
     "max-depth": ["error", 4],
     "max-nested-callbacks": ["error", 3],
+    "complexity": ["error", { "max": 20, "variant": "modified" }],
     "no-else-return": ["error", { "allowElseIf": false }],
     "no-nested-ternary": "error",
     "no-unneeded-ternary": "error",
