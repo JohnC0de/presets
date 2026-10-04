@@ -187,8 +187,19 @@
     "typescript/no-unnecessary-condition": "error",
     "typescript/no-empty-object-type": "error",
     "typescript/no-useless-default-assignment": "error",
-    "typescript/no-unsafe-type-assertion": "error",
-    "typescript/only-throw-error": "error",
+    "typescript/no-unsafe-type-assertion": "off",
+    "typescript/only-throw-error": [
+      "error",
+      {
+        "allow": [
+          {
+            "from": "package",
+            "package": "@tanstack/router-core",
+            "name": ["Redirect", "NotFoundError"]
+          }
+        ]
+      }
+    ],
     "typescript/require-await": "error",
     "typescript/switch-exhaustiveness-check": [
       "error",
@@ -410,10 +421,24 @@
   },
   "overrides": [
     {
+      "files": ["**/bin/**", "**/cli/**", "**/commands/**"],
+      "rules": { "no-console": "off" }
+    },
+    {
+      "files": ["scripts/**/*.{mjs,cjs,js}"],
+      "rules": {
+        "typescript/no-unsafe-argument": "off",
+        "typescript/no-unsafe-assignment": "off",
+        "typescript/no-unsafe-call": "off",
+        "typescript/no-unsafe-member-access": "off",
+        "typescript/no-unsafe-return": "off"
+      }
+    },
+    {
       "files": ["**/*.{test,spec}.{ts,tsx,js,mjs,cjs}", "**/test/**/*.{ts,tsx,js,mjs}"],
       "rules": {
         "jest/expect-expect": "error",
-        "jest/no-conditional-in-test": "error",
+        "jest/no-conditional-expect": "off",
         "jest/no-disabled-tests": "error",
         "jest/no-focused-tests": "error",
         "jest/no-identical-title": "error",

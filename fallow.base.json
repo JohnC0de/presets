@@ -26,6 +26,7 @@
     ".fallow/**",
     "**/*.gen.ts"
   ],
+  "ignoreDependencies": ["@oxlint/plugins"],
   "ignoreExportsUsedInFile": true,
   "rules": {
     "unused-files": "error",

@@ -88,6 +88,12 @@
     "jsx-a11y/role-supports-aria-props": "error",
     "jsx-a11y/prefer-tag-over-role": "off"
   },
+  "overrides": [
+    {
+      "files": ["src/routes/**", "**/routes/**/*.tsx"],
+      "rules": { "react/only-export-components": "off" }
+    }
+  ],
   "ignorePatterns": [
     "dist",
     "build",
