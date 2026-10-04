@@ -1,6 +1,6 @@
 {
   "name": "@john/presets",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "Shared tooling presets for personal projects: TypeScript, oxlint (+ anti-slop), oxfmt, editorconfig, gitattributes, fallow",
   "keywords": [
     "anti-slop",
@@ -49,14 +49,16 @@
     "build:anti-slop:watch": "bun build ./oxlint/anti-slop/index.ts --outfile=oxlint/anti-slop/index.mjs --target=node --format=esm --packages=external --watch",
     "format": "oxfmt --config oxfmtrc.json .",
     "format:check": "oxfmt --check --config oxfmtrc.json .",
-    "lint": "oxlint --type-aware --type-check .",
+    "lint": "oxlint --type-aware --type-check --ignore-pattern test/fixtures .",
+    "test": "bun test test",
     "typecheck": "tsc --noEmit",
     "fallow": "fallow",
     "fallow:audit": "fallow audit",
-    "check": "bun run build:anti-slop && bun run format:check && bun run lint && bun run typecheck && bun run fallow"
+    "check": "bun run build:anti-slop && bun run format:check && bun run lint && bun run typecheck && bun run test && bun run fallow"
   },
   "devDependencies": {
     "@oxlint/plugins": "1.80.0",
+    "@tanstack/router-core": "^1.171.34",
     "@types/bun": "1.4.0",
     "fallow": "3.18.0",
     "oxfmt": "0.65.0",
