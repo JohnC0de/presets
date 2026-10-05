@@ -3,7 +3,6 @@
   "extends": ["./fallow.base.json"],
   "entry": ["oxlint/anti-slop/index.ts", "bin/presets-sync.ts"],
   "ignorePatterns": ["oxlint/anti-slop/index.mjs"],
-  "ignoreDependencies": ["@oxlint/plugins"],
   "duplicates": {
     "ignore": ["oxlint/anti-slop/**"]
   },

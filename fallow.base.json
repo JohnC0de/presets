@@ -27,6 +27,7 @@
     "**/*.gen.ts"
   ],
   "ignoreExportsUsedInFile": true,
+  "ignoreDependencies": ["@john/presets", "@oxlint/plugins"],
   "rules": {
     "unused-files": "error",
     "unused-dependencies": "error",
