@@ -338,7 +338,7 @@
     "import/no-unassigned-import": [
       "error",
       {
-        "allow": ["**/*.{css,scss,sass,less}", "**/register", "**/polyfill*"]
+        "allow": ["**/*.{css,scss,sass,less}", "**/register", "**/polyfill*", "**/server-only"]
       }
     ],
     "import/consistent-type-specifier-style": ["error", "prefer-top-level"],
@@ -432,6 +432,12 @@
         "anti-slop/no-new-promise": "off",
         "typescript/no-confusing-void-expression": "off",
         "typescript/no-unnecessary-condition": "off"
+      }
+    },
+    {
+      "files": ["scripts/**"],
+      "rules": {
+        "no-console": "off"
       }
     }
   ]

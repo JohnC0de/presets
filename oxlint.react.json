@@ -62,6 +62,18 @@
     "react/no-clone-element": "error",
     "react/no-react-children": "error",
     "react/only-export-components": ["error", { "allowConstantExport": true }],
+    "typescript/only-throw-error": [
+      "error",
+      {
+        "allow": [
+          {
+            "from": "package",
+            "package": "@tanstack/router-core",
+            "name": ["Redirect", "NotFoundError"]
+          }
+        ]
+      }
+    ],
     "react/rule-suppression": "error",
     "react/syntax": "error",
     "react/unsupported-syntax": "error",
@@ -88,6 +100,14 @@
     "jsx-a11y/role-supports-aria-props": "error",
     "jsx-a11y/prefer-tag-over-role": "off"
   },
+  "overrides": [
+    {
+      "files": ["src/routes/**"],
+      "rules": {
+        "react/only-export-components": "off"
+      }
+    }
+  ],
   "ignorePatterns": [
     "dist",
     "build",

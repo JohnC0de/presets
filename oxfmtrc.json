@@ -25,6 +25,7 @@
     "**/.next/**",
     "**/node_modules/**",
     "**/src/routeTree.gen.ts",
+    "**/drizzle/meta/**",
     "**/bun.lock",
     "**/package-lock.json",
     "**/pnpm-lock.yaml",
