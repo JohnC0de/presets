@@ -187,7 +187,7 @@ function unsafeDirectValue(
     );
     if (unsafeMembers.includes('any')) return 'any';
     return unsafeMembers.length > 0 && unsafeMembers.every((member) => member !== null)
-      ? unsafeMembers[0]
+      ? unsafeMembers[0] ?? null
       : null;
   }
   if (unwrapped.type !== 'TSTypeReference') return null;
@@ -431,19 +431,6 @@ function classifyAliasBroadTarget(
   const nextResolving = new Set(resolvingAliases);
   nextResolving.add(name);
   return classifyAliasBroadTarget(alias.typeAnnotation, environment, nextSubstitutions, nextResolving);
-}
-
-export function isPopulatedObjectExpression(expression: ESTree.Expression): boolean {
-  let current = expression;
-  while (
-    current.type === 'ParenthesizedExpression' ||
-    current.type === 'TSAsExpression' ||
-    current.type === 'TSTypeAssertion' ||
-    current.type === 'TSNonNullExpression'
-  ) {
-    current = current.expression;
-  }
-  return current.type === 'ObjectExpression' && current.properties.length > 0;
 }
 
 export function isKnownEvidenceExpression(expression: ESTree.Expression): boolean {

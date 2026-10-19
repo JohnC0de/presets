@@ -13,26 +13,26 @@ function isFunctionNode(node: ESTree.Node): node is FunctionNode {
 
 function unwrapParenthesizedAncestor(node: ESTree.Node): {
   readonly current: ESTree.Node
-  readonly parent: ESTree.Node
+  readonly parent: ESTree.Node | null
 } {
   let current = node
   let parent = node.parent
-  while (parent.type === "ParenthesizedExpression" && parent.expression === current) {
+  while (parent?.type === "ParenthesizedExpression" && parent.expression === current) {
     current = parent
     parent = parent.parent
   }
   return { current, parent }
 }
 
-function isExportDeclaration(node: ESTree.Node): boolean {
-  return node.type === "ExportNamedDeclaration" || node.type === "ExportDefaultDeclaration"
+function isExportDeclaration(node: ESTree.Node | null): boolean {
+  return node?.type === "ExportNamedDeclaration" || node?.type === "ExportDefaultDeclaration"
 }
 
 /** True only when this function is the exported binding, not a helper nested inside an export. */
 function isExported(node: FunctionNode): boolean {
   const { current, parent } = unwrapParenthesizedAncestor(node)
   if (isExportDeclaration(parent)) return true
-  if (parent.type !== "VariableDeclarator" || parent.init !== current) return false
+  if (parent?.type !== "VariableDeclarator" || parent.init !== current) return false
   const declaration = parent.parent
   return declaration.type === "VariableDeclaration" && isExportDeclaration(declaration.parent)
 }
@@ -52,19 +52,19 @@ function isMethod(node: FunctionNode): boolean {
 
 function isCallback(node: FunctionNode): boolean {
   const { current, parent } = unwrapParenthesizedAncestor(node)
-  if (parent.type === "CallExpression" || parent.type === "NewExpression") {
+  if (parent?.type === "CallExpression" || parent?.type === "NewExpression") {
     return parent.arguments.some((argument) => argument === current)
   }
-  if (parent.type === "JSXExpressionContainer") {
+  if (parent?.type === "JSXExpressionContainer") {
     return true
   }
-  return parent.type === "Property" && parent.value === current && !parent.method
+  return parent?.type === "Property" && parent.value === current && !parent.method
 }
 
 function returnedExpression(node: FunctionNode): ESTree.Expression | null {
-  if (node.type === "ArrowFunctionExpression" && node.expression) return node.body
+  if (node.type === "ArrowFunctionExpression" && node.body.type !== "BlockStatement") return node.body
   const body = node.body
-  if (body.type !== "BlockStatement" || body.body.length !== 1) return null
+  if (body === null || body.type !== "BlockStatement" || body.body.length !== 1) return null
   const statement = body.body[0]
   return statement?.type === "ReturnStatement" ? statement.argument : null
 }

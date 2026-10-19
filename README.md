@@ -19,6 +19,10 @@ versions aligned with those pins.
 
 Install `p` from `~/projects/tools` before running sync commands. Run `bun run sync:anti-slop` to refresh this package's generated assets, then `bun run check`. Do not edit the generated engine copies here.
 
+The check runs config parsing, type-aware lint, TypeScript and fallow against the
+canonical plugin copy. `oxlint.self.json` checks engine sources separately from
+the consumer preset, which deliberately ignores copied tooling.
+
 > **This repo must stay public.** Bun's `github:` shorthand fetches the tarball
 > unauthenticated. Private + `GITHUB_TOKEN` does not fix that; use
 > `git+ssh://git@github.com/JohnC0de/presets.git` only if you accept SSH everywhere.

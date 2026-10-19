@@ -22,7 +22,7 @@ function propertyName(node: ESTree.MemberExpression): string | null {
   return node.property.type === "Identifier" ? node.property.name : null
 }
 
-function isExpectCall(node: ESTree.Node): boolean {
+function isExpectCall(node: ESTree.Node): node is ESTree.CallExpression {
   return (
     node.type === "CallExpression" &&
     node.callee.type === "Identifier" &&

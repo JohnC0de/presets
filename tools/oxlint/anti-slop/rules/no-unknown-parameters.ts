@@ -51,10 +51,13 @@ export const noUnknownParametersRule = defineRule({
   },
   createOnce(context) {
     const checkParameters = (node: ParameterOwner) => {
-      const options = context.options[0];
+      const value = context.options[0];
+      const options = typeof value === 'object' && value !== null && !Array.isArray(value) ? value : undefined;
       if (options?.allowInTypeGuards === true && node.returnType?.typeAnnotation.type === 'TSTypePredicate') return;
       const caseInsensitive = options?.caseInsensitive === true;
-      const allowedNames: readonly string[] = options?.allowedNames === undefined ? DEFAULT_ALLOWED_NAMES : options.allowedNames;
+      const allowedNames: readonly string[] = Array.isArray(options?.allowedNames)
+        ? options.allowedNames.filter((name): name is string => typeof name === 'string')
+        : DEFAULT_ALLOWED_NAMES;
       for (const parameter of node.params) {
         const annotation = functionParameterTypeAnnotation(parameter);
         if (annotation === null || annotation === undefined) continue;

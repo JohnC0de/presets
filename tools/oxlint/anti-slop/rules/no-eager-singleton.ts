@@ -43,7 +43,9 @@ function identifierName(node: ESTree.Expression | ESTree.Super): string | null {
 
 function extraNames(options: unknown, key: "callNames" | "newNames"): string[] {
   if (typeof options !== "object" || options === null || Array.isArray(options)) return []
-  const value = options[key]
+  const value = key === "callNames"
+    ? ("callNames" in options ? options.callNames : undefined)
+    : ("newNames" in options ? options.newNames : undefined)
   return Array.isArray(value) ? value.filter((entry) => typeof entry === "string") : []
 }
 

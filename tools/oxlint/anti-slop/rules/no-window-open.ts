@@ -5,7 +5,7 @@ import type { ESTree } from "@oxlint/plugins"
 const HOSTS = new Set(["window", "globalThis", "self"])
 
 function isGlobalOpen(
-  sourceCode: { isGlobalReference: (node: ESTree.Identifier) => boolean },
+  sourceCode: { isGlobalReference: (node: ESTree.IdentifierReference) => boolean },
   callee: ESTree.Expression,
 ): boolean {
   if (callee.type === "Identifier") {

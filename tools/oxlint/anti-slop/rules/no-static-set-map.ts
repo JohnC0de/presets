@@ -28,7 +28,7 @@ function isStaticMapEntry(node: ESTree.Expression): boolean {
   const unwrapped = unwrapExpression(node)
   if (unwrapped.type !== "ArrayExpression" || unwrapped.elements.length !== 2) return false
   const key = unwrapped.elements[0]
-  return key !== null && key.type !== "SpreadElement" && isLiteralKey(key)
+  return key !== null && key !== undefined && key.type !== "SpreadElement" && isLiteralKey(key)
 }
 
 function isStaticSetArgument(node: ESTree.Expression): boolean {

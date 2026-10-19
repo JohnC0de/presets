@@ -9,6 +9,7 @@ type Comment = {
   type: string
   value: string
   loc: { start: { line: number }; end: { line: number } } | undefined
+  range: [number, number]
 }
 
 function commentLines(comment: Comment): number {
@@ -58,7 +59,7 @@ export const noLongCommentsRule = defineRule({
             ? option.maxLines
             : DEFAULT_MAX_LINES
 
-        const comments = context.sourceCode.getAllComments() as Comment[]
+        const comments = context.sourceCode.getAllComments()
         let run: Comment[] = []
         let runStartLine = 0
 

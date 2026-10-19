@@ -45,7 +45,10 @@
     "format": "oxfmt --threads=4 --config oxfmtrc.json .",
     "format:check": "oxfmt --threads=4 --check --config oxfmtrc.json .",
     "check:config": "oxlint --print-config -c .oxlintrc.json > /dev/null && oxlint --print-config -c oxlint.react.json > /dev/null",
-    "check": "bun run sync:anti-slop && bun run format:check && bun run check:config"
+    "lint": "oxlint --threads=4 --config oxlint.self.json --type-aware --type-check tools/oxlint/anti-slop",
+    "typecheck": "tsc --noEmit",
+    "fallow": "fallow",
+    "check": "bun run sync:anti-slop && bun run format:check && bun run check:config && bun run lint && bun run typecheck && bun run fallow"
   },
   "devDependencies": {
     "@oxlint/plugins": "1.80.0",
