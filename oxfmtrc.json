@@ -29,7 +29,7 @@
     "**/bun.lock",
     "**/package-lock.json",
     "**/pnpm-lock.yaml",
-    "oxlint/anti-slop/index.mjs",
+    "tools/oxlint/anti-slop/**",
     "**/.agent/**",
     "**/.agents/**",
     "**/.claude/**",

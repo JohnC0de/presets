@@ -29,7 +29,7 @@
   "jsPlugins": [
     {
       "name": "anti-slop",
-      "specifier": "./oxlint/anti-slop/index.mjs"
+      "specifier": "./tools/oxlint/anti-slop/index.mjs"
     }
   ],
   "ignorePatterns": [
@@ -42,7 +42,7 @@
     ".next",
     "node_modules",
     "**/*.gen.ts",
-    "oxlint/anti-slop/**",
+    "tools/oxlint/anti-slop/**",
     "scripts/**",
     ".agent/**",
     ".agents/**",
