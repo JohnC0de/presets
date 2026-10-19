@@ -1,0 +1,12 @@
+{
+  "name": "@john/tools-anti-slop",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.mjs",
+    "./effect": "./effect/index.mjs"
+  },
+  "peerDependencies": {
+    "@oxlint/plugins": ">=1.80.0 <2"
+  }
+}
