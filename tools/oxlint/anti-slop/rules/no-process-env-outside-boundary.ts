@@ -24,7 +24,7 @@ function staticPropertyName(node: ESTree.MemberExpression): string | null {
     : null
 }
 
-function isProcessEnvRoot(node: ESTree.Node): node is ESTree.MemberExpression {
+function isProcessEnvRoot(node: ESTree.Node): boolean {
   return (
     node.type === "MemberExpression" &&
     node.object.type === "Identifier" &&
@@ -57,7 +57,7 @@ function isProcessEnvAccess(node: ESTree.MemberExpression): boolean {
 
 function extraAllowedFiles(options: unknown): string[] {
   if (typeof options !== "object" || options === null || Array.isArray(options)) return []
-  const value = options.allowedFiles
+  const value = "allowedFiles" in options ? options.allowedFiles : undefined
   return Array.isArray(value) ? value.filter((entry) => typeof entry === "string") : []
 }
 

@@ -4,7 +4,7 @@ import type { ESTree } from "@oxlint/plugins"
 
 const SAFE_HTML = /^\s*safe-html:/u
 
-function isStaticHtml(node: ESTree.Expression): boolean {
+function isStaticHtml(node: ESTree.Node): boolean {
   if (node.type === "Literal" && typeof node.value === "string") return true
   if (node.type === "TemplateLiteral") return node.expressions.every(isStaticHtml)
   return false
@@ -57,7 +57,6 @@ export const noUnsafeInnerHtmlRule = defineRule({
       Property(node) {
         if (propertyName(node.key, node.computed) !== "__html") return
         if (node.parent.type !== "ObjectExpression") return
-        if (node.value.type === "AssignmentPattern" || node.value.type === "RestElement") return
         if (isStaticHtml(node.value)) return
         if (hasSafeHtmlComment(context.sourceCode, node)) return
         context.report({ node, messageId: "unsafe" })

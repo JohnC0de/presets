@@ -60,10 +60,10 @@ export const noForbiddenTermInSymbolNamesRule = defineRule({
         declarations = false;
         allowed = [];
         const options = context.options[0];
-        if (options === undefined) return;
+        if (typeof options !== 'object' || options === null || Array.isArray(options)) return;
         declarations = options.targets === 'declarations';
-        if (options.allowedPatterns === undefined) return;
-        allowed = options.allowedPatterns.map((pattern: string) =>
+        if (!Array.isArray(options.allowedPatterns)) return;
+        allowed = options.allowedPatterns.filter((pattern): pattern is string => typeof pattern === 'string').map((pattern) =>
           new RegExp(pattern, options.caseInsensitive === false ? 'u' : 'iu'));
       },
       Identifier: reportSymbol,

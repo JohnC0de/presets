@@ -1,10 +1,10 @@
-// oxlint/anti-slop/index.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/index.ts
 import { eslintCompatPlugin } from "@oxlint/plugins";
 
-// oxlint/anti-slop/rules/no-array-filter-map.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-array-filter-map.ts
 import { defineRule } from "@oxlint/plugins";
 
-// oxlint/anti-slop/shared/array-method.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/shared/array-method.ts
 function unwrapArrayExpression(node) {
   while (node.type === "ParenthesizedExpression" || node.type === "ChainExpression" || node.type === "TSAsExpression" || node.type === "TSTypeAssertion" || node.type === "TSNonNullExpression" || node.type === "TSSatisfiesExpression") {
     node = node.expression;
@@ -76,7 +76,7 @@ function isKnownArrayExpression(sourceCode, node, visited = new Set) {
   return false;
 }
 
-// oxlint/anti-slop/rules/no-array-filter-map.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-array-filter-map.ts
 var noArrayFilterMapRule = defineRule({
   meta: {
     type: "suggestion",
@@ -111,7 +111,7 @@ var noArrayFilterMapRule = defineRule({
   }
 });
 
-// oxlint/anti-slop/rules/no-reduce-accumulator-copy.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-reduce-accumulator-copy.ts
 import { defineRule as defineRule2 } from "@oxlint/plugins";
 function enclosingReducer(node) {
   let parent = node.parent;
@@ -204,7 +204,7 @@ var noReduceAccumulatorCopyRule = defineRule2({
   }
 });
 
-// oxlint/anti-slop/vendor/eslint-stylistic/padding-line-ast.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/vendor/eslint-stylistic/padding-line-ast.ts
 var LINEBREAKS = new Set([`\r
 `, "\r", `
 `, "\u2028", "\u2029"]);
@@ -222,7 +222,7 @@ function isParenthesized(node, sourceCode) {
   return before?.value === "(" && after?.value === ")";
 }
 
-// oxlint/anti-slop/vendor/eslint-stylistic/padding-line-between-statements.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/vendor/eslint-stylistic/padding-line-between-statements.ts
 var CJS_EXPORT = /^(?:module\s*\.\s*)?exports(?:\s*\.|\s*\[|$)/u;
 var CJS_IMPORT = /^require\(/u;
 var LT = `[${Array.from(LINEBREAKS).join("")}]`;
@@ -674,7 +674,7 @@ function createPaddingLineRule(options) {
   };
 }
 
-// oxlint/anti-slop/rules/require-readable-spacing.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/require-readable-spacing.ts
 var paddingRule = createPaddingLineRule([
   { blankLine: "always", prev: "import", next: "*" },
   { blankLine: "always", prev: "*", next: { selector: "Program > :not(ImportDeclaration)" } },
@@ -715,7 +715,7 @@ var requireReadableSpacingRule = {
   }
 };
 
-// oxlint/anti-slop/rules/no-async-context-enter-with.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-async-context-enter-with.ts
 import { defineRule as defineRule3 } from "@oxlint/plugins";
 var noAsyncContextEnterWithRule = defineRule3({
   meta: {
@@ -741,7 +741,7 @@ var noAsyncContextEnterWithRule = defineRule3({
   }
 });
 
-// oxlint/anti-slop/rules/no-banner-comments.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-banner-comments.ts
 import { defineRule as defineRule4 } from "@oxlint/plugins";
 var BANNER = /^\s*(?:[=*#-]{4,}|(?:phase|step|section|part)\s+\d)\b/iu;
 var noBannerCommentsRule = defineRule4({
@@ -767,7 +767,7 @@ var noBannerCommentsRule = defineRule4({
   }
 });
 
-// oxlint/anti-slop/rules/no-boolean-if-return.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-boolean-if-return.ts
 import { defineRule as defineRule5 } from "@oxlint/plugins";
 function booleanReturn(statement) {
   const inner = statement.type === "BlockStatement" && statement.body.length === 1 ? statement.body[0] : statement;
@@ -804,7 +804,7 @@ var noBooleanIfReturnRule = defineRule5({
   }
 });
 
-// oxlint/anti-slop/rules/no-chained-type-assertions.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-chained-type-assertions.ts
 import { defineRule as defineRule6 } from "@oxlint/plugins";
 function isTypeAssertionExpression(node) {
   return node.type === "TSAsExpression" || node.type === "TSTypeAssertion";
@@ -863,7 +863,7 @@ var noChainedTypeAssertionsRule = defineRule6({
   }
 });
 
-// oxlint/anti-slop/rules/no-closing-brace-label.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-closing-brace-label.ts
 import { defineRule as defineRule7 } from "@oxlint/plugins";
 var END_LABEL = /^\s*end(?:\s+\w+)?\s*$/iu;
 var noClosingBraceLabelRule = defineRule7({
@@ -893,7 +893,7 @@ var noClosingBraceLabelRule = defineRule7({
   }
 });
 
-// oxlint/anti-slop/rules/no-conditional-empty-object-spread.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-conditional-empty-object-spread.ts
 import { defineRule as defineRule8 } from "@oxlint/plugins";
 function unwrapParentheses(node) {
   let current = node;
@@ -932,7 +932,7 @@ var noConditionalEmptyObjectSpreadRule = defineRule8({
   }
 });
 
-// oxlint/anti-slop/rules/no-document-cookie.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-document-cookie.ts
 import { defineRule as defineRule9 } from "@oxlint/plugins";
 var DOCUMENT_HOSTS = new Set(["document", "globalThis", "window", "self"]);
 function staticString(node) {
@@ -979,7 +979,7 @@ var noDocumentCookieRule = defineRule9({
   }
 });
 
-// oxlint/anti-slop/rules/no-eager-singleton.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-eager-singleton.ts
 import { defineRule as defineRule10 } from "@oxlint/plugins";
 var DEFAULT_CALLS = new Set([
   "drizzle",
@@ -1017,7 +1017,7 @@ function identifierName(node) {
 function extraNames(options, key) {
   if (typeof options !== "object" || options === null || Array.isArray(options))
     return [];
-  const value = options[key];
+  const value = key === "callNames" ? "callNames" in options ? options.callNames : undefined : ("newNames" in options) ? options.newNames : undefined;
   return Array.isArray(value) ? value.filter((entry) => typeof entry === "string") : [];
 }
 var noEagerSingletonRule = defineRule10({
@@ -1068,7 +1068,7 @@ var noEagerSingletonRule = defineRule10({
   }
 });
 
-// oxlint/anti-slop/rules/no-empty-if-chain.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-empty-if-chain.ts
 import { defineRule as defineRule11 } from "@oxlint/plugins";
 function isEmptyStatementish(statement) {
   if (statement.type === "EmptyStatement")
@@ -1110,7 +1110,7 @@ var noEmptyIfChainRule = defineRule11({
   }
 });
 
-// oxlint/anti-slop/rules/no-foreign-directive.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-foreign-directive.ts
 import { defineRule as defineRule12 } from "@oxlint/plugins";
 var FOREIGN = /\b(?:biome-ignore|prettier-ignore)\b/u;
 var noForeignDirectiveRule = defineRule12({
@@ -1141,7 +1141,7 @@ var noForeignDirectiveRule = defineRule12({
   }
 });
 
-// oxlint/anti-slop/rules/no-icu-invalid-locale.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-icu-invalid-locale.ts
 import { defineRule as defineRule13 } from "@oxlint/plugins";
 var UNDERSCORE_LOCALE = /^[A-Za-z]{2,3}_[A-Za-z0-9_-]+$/u;
 var INTL_CTORS = new Set([
@@ -1205,7 +1205,7 @@ var noIcuInvalidLocaleRule = defineRule13({
   }
 });
 
-// oxlint/anti-slop/rules/no-icu-missing-other.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-icu-missing-other.ts
 import { defineRule as defineRule14 } from "@oxlint/plugins";
 var KIND = /,\s*(?:plural|selectordinal|select)\s*,/u;
 var OTHER = /\bother\s*\{/u;
@@ -1240,7 +1240,7 @@ var noIcuMissingOtherRule = defineRule14({
   }
 });
 
-// oxlint/anti-slop/rules/no-inline-cast-access.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-inline-cast-access.ts
 import { defineRule as defineRule15 } from "@oxlint/plugins";
 function isInlineObjectAssertion(node) {
   return node.typeAnnotation.type === "TSTypeLiteral";
@@ -1282,10 +1282,10 @@ var noInlineCastAccessRule = defineRule15({
   }
 });
 
-// oxlint/anti-slop/rules/no-known-value-widening.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-known-value-widening.ts
 import { defineRule as defineRule16 } from "@oxlint/plugins";
 
-// oxlint/anti-slop/shared/lexical-type-parameters.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/shared/lexical-type-parameters.ts
 function isNode(value) {
   return typeof value === "object" && value !== null && "type" in value && typeof value.type === "string";
 }
@@ -1329,7 +1329,7 @@ function lexicalTypeParameterNames(node, visitorKeys) {
   return names;
 }
 
-// oxlint/anti-slop/shared/type-alias-resolution.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/shared/type-alias-resolution.ts
 var environmentsByProgram = new WeakMap;
 function isNode2(value) {
   return typeof value === "object" && value !== null && "type" in value && typeof value.type === "string";
@@ -1474,7 +1474,7 @@ function resolvedTypeMatches(type, environment, matcher) {
   return evaluate(type, new Map, new Set);
 }
 
-// oxlint/anti-slop/shared/dictionary-types.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/shared/dictionary-types.ts
 var BUILT_INS = new Set([
   "Record",
   "Readonly",
@@ -1579,7 +1579,7 @@ function unsafeDirectValue(type, environment, substitutions, resolvingAliases) {
     const unsafeMembers = unwrapped.types.map((member) => unsafeDirectValue(member, environment, substitutions, resolvingAliases));
     if (unsafeMembers.includes("any"))
       return "any";
-    return unsafeMembers.length > 0 && unsafeMembers.every((member) => member !== null) ? unsafeMembers[0] : null;
+    return unsafeMembers.length > 0 && unsafeMembers.every((member) => member !== null) ? unsafeMembers[0] ?? null : null;
   }
   if (unwrapped.type !== "TSTypeReference")
     return null;
@@ -1775,7 +1775,7 @@ function isKnownEvidenceExpression(expression) {
   return current.type === "ArrayExpression" || current.type === "ArrowFunctionExpression" || current.type === "ClassExpression" || current.type === "FunctionExpression" || current.type === "NewExpression" || current.type === "Literal" || current.type === "TemplateLiteral" || current.type === "UnaryExpression";
 }
 
-// oxlint/anti-slop/shared/function-parameters.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/shared/function-parameters.ts
 function containsUnknownType(type) {
   if (type.type === "TSUnknownKeyword")
     return true;
@@ -1812,7 +1812,7 @@ function functionParameterBindingName(parameter, sourceCode) {
   return annotationStart === undefined ? sourceText : sourceText.slice(0, annotationStart - parameter.start).trimEnd();
 }
 
-// oxlint/anti-slop/shared/scope.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/shared/scope.ts
 function resolveVariable(sourceCode, identifier) {
   let scope = sourceCode.getScope(identifier);
   while (scope !== null) {
@@ -1824,7 +1824,7 @@ function resolveVariable(sourceCode, identifier) {
   return null;
 }
 
-// oxlint/anti-slop/rules/no-known-value-widening.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-known-value-widening.ts
 function unwrapExpression(expression) {
   let current = expression;
   while (current.type === "ParenthesizedExpression" || current.type === "TSAsExpression" || current.type === "TSSatisfiesExpression" || current.type === "TSTypeAssertion" || current.type === "TSNonNullExpression") {
@@ -2096,7 +2096,7 @@ var noKnownValueWideningRule = defineRule16({
   }
 });
 
-// oxlint/anti-slop/rules/no-long-comments.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-long-comments.ts
 import { defineRule as defineRule17 } from "@oxlint/plugins";
 var DEFAULT_MAX_LINES = 5;
 var LICENSE = /\b(?:spdx-license-identifier|copyright|licensed under|all rights reserved)\b/iu;
@@ -2196,7 +2196,7 @@ var noLongCommentsRule = defineRule17({
   }
 });
 
-// oxlint/anti-slop/rules/no-module-mocking.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-module-mocking.ts
 import { defineRule as defineRule18 } from "@oxlint/plugins";
 var moduleMockMethods = new Set(["doMock", "mock", "unstable_mockModule"]);
 function importedName(node) {
@@ -2255,7 +2255,7 @@ var noModuleMockingRule = defineRule18({
   }
 });
 
-// oxlint/anti-slop/rules/no-new-promise.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-new-promise.ts
 import { defineRule as defineRule19 } from "@oxlint/plugins";
 var noNewPromiseRule = defineRule19({
   meta: {
@@ -2278,7 +2278,7 @@ var noNewPromiseRule = defineRule19({
   }
 });
 
-// oxlint/anti-slop/rules/no-object-parameters.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-object-parameters.ts
 import { defineRule as defineRule20 } from "@oxlint/plugins";
 var noObjectParametersRule = defineRule20({
   meta: {
@@ -2332,7 +2332,7 @@ var noObjectParametersRule = defineRule20({
   }
 });
 
-// oxlint/anti-slop/rules/no-partial-record-satisfies.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-partial-record-satisfies.ts
 import { defineRule as defineRule21 } from "@oxlint/plugins";
 function isTypeName(node, name) {
   return node.type === "TSTypeReference" && node.typeName.type === "Identifier" && node.typeName.name === name;
@@ -2385,7 +2385,7 @@ var noPartialRecordSatisfiesRule = defineRule21({
   }
 });
 
-// oxlint/anti-slop/rules/no-path-prefix-containment.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-path-prefix-containment.ts
 import { defineRule as defineRule22 } from "@oxlint/plugins";
 var PATH_APIS = new Set(["dirname", "join", "normalize", "resolve"]);
 function propertyName(node) {
@@ -2459,10 +2459,10 @@ var noPathPrefixContainmentRule = defineRule22({
   }
 });
 
-// oxlint/anti-slop/rules/no-physical-properties.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-physical-properties.ts
 import { defineRule as defineRule23 } from "@oxlint/plugins";
 
-// oxlint/anti-slop/shared/physical-properties.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/shared/physical-properties.ts
 var PHYSICAL_PATTERNS = [
   /(?:^|[\s"'`{(])(?:-?)(?:[\w[\]:]*:)?(?:ml|mr|pl|pr)-/u,
   /(?:^|[\s"'`{(])(?:[\w[\]:]*:)?text-(?:left|right)(?=["'\s`})]|$)/u,
@@ -2477,7 +2477,7 @@ function hasPhysicalProperty(value) {
   return PHYSICAL_PATTERNS.some((pattern) => pattern.test(value));
 }
 
-// oxlint/anti-slop/rules/no-physical-properties.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-physical-properties.ts
 var noPhysicalPropertiesRule = defineRule23({
   meta: {
     type: "problem",
@@ -2506,7 +2506,7 @@ var noPhysicalPropertiesRule = defineRule23({
   }
 });
 
-// oxlint/anti-slop/rules/no-placeholder-comment.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-placeholder-comment.ts
 import { defineRule as defineRule24 } from "@oxlint/plugins";
 var PLACEHOLDER = /\b(your code here|implementation here|add your logic|helper function|todo:\s*implement(?:\s+this)?)\b/iu;
 var noPlaceholderCommentRule = defineRule24({
@@ -2532,10 +2532,10 @@ var noPlaceholderCommentRule = defineRule24({
   }
 });
 
-// oxlint/anti-slop/rules/no-process-env-outside-boundary.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-process-env-outside-boundary.ts
 import { defineRule as defineRule25 } from "@oxlint/plugins";
 
-// oxlint/anti-slop/shared/filename.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/shared/filename.ts
 function filenameOf(context) {
   return (context.filename ?? context.getFilename?.() ?? "").replaceAll("\\", "/");
 }
@@ -2543,7 +2543,7 @@ function isTestPath(filename) {
   return /\.(?:test|spec)\.[cm]?[jt]sx?$/u.test(filename) || /\/(?:test|tests|__tests__)(?:\/|$)/u.test(filename);
 }
 
-// oxlint/anti-slop/rules/no-process-env-outside-boundary.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-process-env-outside-boundary.ts
 var DEFAULT_ALLOWED = [
   /(?:^|\/)env(?:-base)?\.ts$/u,
   /(?:^|\/)setup-env\.ts$/u,
@@ -2590,7 +2590,7 @@ function isProcessEnvAccess(node) {
 function extraAllowedFiles(options) {
   if (typeof options !== "object" || options === null || Array.isArray(options))
     return [];
-  const value = options.allowedFiles;
+  const value = "allowedFiles" in options ? options.allowedFiles : undefined;
   return Array.isArray(value) ? value.filter((entry) => typeof entry === "string") : [];
 }
 var noProcessEnvOutsideBoundaryRule = defineRule25({
@@ -2628,10 +2628,10 @@ var noProcessEnvOutsideBoundaryRule = defineRule25({
   }
 });
 
-// oxlint/anti-slop/rules/no-reflect-apply.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-reflect-apply.ts
 import { defineRule as defineRule26 } from "@oxlint/plugins";
 
-// oxlint/anti-slop/shared/reflect-method.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/shared/reflect-method.ts
 function isGlobalReflect(sourceCode, expression) {
   if (expression.type !== "Identifier" || expression.name !== "Reflect")
     return false;
@@ -2649,7 +2649,7 @@ function isGlobalReflectMethodCall(sourceCode, callee, methodName) {
   return callee.computed ? property.type === "Literal" && property.value === methodName : property.type === "Identifier" && property.name === methodName;
 }
 
-// oxlint/anti-slop/rules/no-reflect-apply.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-reflect-apply.ts
 var noReflectApplyRule = defineRule26({
   meta: {
     type: "problem",
@@ -2673,7 +2673,7 @@ var noReflectApplyRule = defineRule26({
   }
 });
 
-// oxlint/anti-slop/rules/no-reflect-get.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-reflect-get.ts
 import { defineRule as defineRule27 } from "@oxlint/plugins";
 var noReflectGetRule = defineRule27({
   meta: {
@@ -2698,7 +2698,7 @@ var noReflectGetRule = defineRule27({
   }
 });
 
-// oxlint/anti-slop/rules/no-return-type-utility.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-return-type-utility.ts
 import { defineRule as defineRule28 } from "@oxlint/plugins";
 var ALLOWED_TYPEOF_QUERIES = new Set([
   "setTimeout",
@@ -2762,7 +2762,7 @@ var noReturnTypeUtilityRule = defineRule28({
   }
 });
 
-// oxlint/anti-slop/rules/no-runtime-typeof.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-runtime-typeof.ts
 import { defineRule as defineRule29 } from "@oxlint/plugins";
 function isRuntimeFunction(node) {
   return node.type === "ArrowFunctionExpression" || node.type === "FunctionDeclaration" || node.type === "FunctionExpression";
@@ -2819,7 +2819,7 @@ var noRuntimeTypeofRule = defineRule29({
   }
 });
 
-// oxlint/anti-slop/rules/no-shape-in-symbol-names.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-shape-in-symbol-names.ts
 import { defineRule as defineRule30 } from "@oxlint/plugins";
 var FORBIDDEN_SYMBOL_NAME = "shape";
 function containsForbiddenSymbolName(name) {
@@ -2877,12 +2877,12 @@ var noForbiddenTermInSymbolNamesRule = defineRule30({
         declarations = false;
         allowed = [];
         const options = context.options[0];
-        if (options === undefined)
+        if (typeof options !== "object" || options === null || Array.isArray(options))
           return;
         declarations = options.targets === "declarations";
-        if (options.allowedPatterns === undefined)
+        if (!Array.isArray(options.allowedPatterns))
           return;
-        allowed = options.allowedPatterns.map((pattern) => new RegExp(pattern, options.caseInsensitive === false ? "u" : "iu"));
+        allowed = options.allowedPatterns.filter((pattern) => typeof pattern === "string").map((pattern) => new RegExp(pattern, options.caseInsensitive === false ? "u" : "iu"));
       },
       Identifier: reportSymbol,
       PrivateIdentifier(node) {
@@ -2913,7 +2913,7 @@ var noForbiddenTermInSymbolNamesRule = defineRule30({
   }
 });
 
-// oxlint/anti-slop/rules/no-silent-skip.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-silent-skip.ts
 import { defineRule as defineRule31 } from "@oxlint/plugins";
 var SKIP_CALLEES = new Set(["xit", "xtest", "xdescribe"]);
 var TEST_CALLEES = new Set(["it", "test", "describe"]);
@@ -3029,7 +3029,7 @@ var noSilentSkipRule = defineRule31({
   }
 });
 
-// oxlint/anti-slop/rules/no-source-text-assertions.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-source-text-assertions.ts
 import { defineRule as defineRule32 } from "@oxlint/plugins";
 var SOURCE_PROPS = new Set(["innerHTML", "outerHTML", "outerText"]);
 var SOURCE_IDENTIFIERS = new Set([
@@ -3116,7 +3116,7 @@ var noSourceTextAssertionsRule = defineRule32({
   }
 });
 
-// oxlint/anti-slop/rules/no-spread-input-in-query-key.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-spread-input-in-query-key.ts
 import { defineRule as defineRule33 } from "@oxlint/plugins";
 function propertyName3(node) {
   if (node.computed) {
@@ -3173,7 +3173,7 @@ var noSpreadInputInQueryKeyRule = defineRule33({
   }
 });
 
-// oxlint/anti-slop/rules/no-static-set-map.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-static-set-map.ts
 import { defineRule as defineRule34 } from "@oxlint/plugins";
 function unwrapExpression2(expression) {
   let current = expression;
@@ -3191,7 +3191,7 @@ function isStaticMapEntry(node) {
   if (unwrapped.type !== "ArrayExpression" || unwrapped.elements.length !== 2)
     return false;
   const key = unwrapped.elements[0];
-  return key !== null && key.type !== "SpreadElement" && isLiteralKey(key);
+  return key !== null && key !== undefined && key.type !== "SpreadElement" && isLiteralKey(key);
 }
 function isStaticSetArgument(node) {
   const unwrapped = unwrapExpression2(node);
@@ -3239,7 +3239,7 @@ var noStaticSetMapRule = defineRule34({
   }
 });
 
-// oxlint/anti-slop/rules/no-string-discriminant.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-string-discriminant.ts
 import { defineRule as defineRule35 } from "@oxlint/plugins";
 var BOOLEAN_STATE = new Set(["loading", "isLoading", "completed", "success", "hasError"]);
 var STRING_DISCRIMINANT = new Set(["kind", "status"]);
@@ -3296,7 +3296,7 @@ var noStringDiscriminantRule = defineRule35({
   }
 });
 
-// oxlint/anti-slop/rules/no-swallowed-error.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-swallowed-error.ts
 import { defineRule as defineRule36 } from "@oxlint/plugins";
 function isConsoleCall(statement) {
   if (statement.type !== "ExpressionStatement")
@@ -3331,7 +3331,7 @@ var noSwallowedErrorRule = defineRule36({
   }
 });
 
-// oxlint/anti-slop/rules/no-string-id-alias.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-string-id-alias.ts
 import { defineRule as defineRule37 } from "@oxlint/plugins";
 var ALIAS = /(?:Id|Email|Slug)$/u;
 function unwrapType2(type) {
@@ -3375,7 +3375,7 @@ var noStringIdAliasRule = defineRule37({
   }
 });
 
-// oxlint/anti-slop/rules/no-swallowed-rejection.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-swallowed-rejection.ts
 import { defineRule as defineRule38 } from "@oxlint/plugins";
 var ALLOWED_RECEIVERS = new Set([
   "abort",
@@ -3464,7 +3464,7 @@ var noSwallowedRejectionRule = defineRule38({
   }
 });
 
-// oxlint/anti-slop/rules/no-tiny-functions.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-tiny-functions.ts
 import { defineRule as defineRule39 } from "@oxlint/plugins";
 function isFunctionNode2(node) {
   return node.type === "ArrowFunctionExpression" || node.type === "FunctionDeclaration" || node.type === "FunctionExpression";
@@ -3472,20 +3472,20 @@ function isFunctionNode2(node) {
 function unwrapParenthesizedAncestor(node) {
   let current = node;
   let parent = node.parent;
-  while (parent.type === "ParenthesizedExpression" && parent.expression === current) {
+  while (parent?.type === "ParenthesizedExpression" && parent.expression === current) {
     current = parent;
     parent = parent.parent;
   }
   return { current, parent };
 }
 function isExportDeclaration(node) {
-  return node.type === "ExportNamedDeclaration" || node.type === "ExportDefaultDeclaration";
+  return node?.type === "ExportNamedDeclaration" || node?.type === "ExportDefaultDeclaration";
 }
 function isExported(node) {
   const { current, parent } = unwrapParenthesizedAncestor(node);
   if (isExportDeclaration(parent))
     return true;
-  if (parent.type !== "VariableDeclarator" || parent.init !== current)
+  if (parent?.type !== "VariableDeclarator" || parent.init !== current)
     return false;
   const declaration = parent.parent;
   return declaration.type === "VariableDeclaration" && isExportDeclaration(declaration.parent);
@@ -3499,19 +3499,19 @@ function isMethod(node) {
 }
 function isCallback(node) {
   const { current, parent } = unwrapParenthesizedAncestor(node);
-  if (parent.type === "CallExpression" || parent.type === "NewExpression") {
+  if (parent?.type === "CallExpression" || parent?.type === "NewExpression") {
     return parent.arguments.some((argument) => argument === current);
   }
-  if (parent.type === "JSXExpressionContainer") {
+  if (parent?.type === "JSXExpressionContainer") {
     return true;
   }
-  return parent.type === "Property" && parent.value === current && !parent.method;
+  return parent?.type === "Property" && parent.value === current && !parent.method;
 }
 function returnedExpression(node) {
-  if (node.type === "ArrowFunctionExpression" && node.expression)
+  if (node.type === "ArrowFunctionExpression" && node.body.type !== "BlockStatement")
     return node.body;
   const body = node.body;
-  if (body.type !== "BlockStatement" || body.body.length !== 1)
+  if (body === null || body.type !== "BlockStatement" || body.body.length !== 1)
     return null;
   const statement = body.body[0];
   return statement?.type === "ReturnStatement" ? statement.argument : null;
@@ -3578,7 +3578,7 @@ var noTinyFunctionsRule = defineRule39({
   }
 });
 
-// oxlint/anti-slop/rules/no-typescript-enum.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-typescript-enum.ts
 import { defineRule as defineRule40 } from "@oxlint/plugins";
 function importedName2(node) {
   if (node.type !== "ImportSpecifier")
@@ -3631,7 +3631,7 @@ var noTypescriptEnumRule = defineRule40({
   }
 });
 
-// oxlint/anti-slop/rules/no-ui-presence-tests.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-ui-presence-tests.ts
 import { defineRule as defineRule41 } from "@oxlint/plugins";
 var PRESENCE_MATCHERS = new Set(["toBeInTheDocument", "toBeVisible", "toBeEmptyDOMElement"]);
 function propertyName5(node) {
@@ -3688,7 +3688,7 @@ var noUiPresenceTestsRule = defineRule41({
   }
 });
 
-// oxlint/anti-slop/rules/no-unknown-parameters.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-unknown-parameters.ts
 import { defineRule as defineRule42 } from "@oxlint/plugins";
 var DEFAULT_ALLOWED_NAMES = ["cause"];
 function isTypePredicateSubject(owner, parameterName) {
@@ -3716,11 +3716,12 @@ var noUnknownParametersRule = defineRule42({
   },
   createOnce(context) {
     const checkParameters = (node) => {
-      const options = context.options[0];
+      const value = context.options[0];
+      const options = typeof value === "object" && value !== null && !Array.isArray(value) ? value : undefined;
       if (options?.allowInTypeGuards === true && node.returnType?.typeAnnotation.type === "TSTypePredicate")
         return;
       const caseInsensitive = options?.caseInsensitive === true;
-      const allowedNames = options?.allowedNames === undefined ? DEFAULT_ALLOWED_NAMES : options.allowedNames;
+      const allowedNames = Array.isArray(options?.allowedNames) ? options.allowedNames.filter((name) => typeof name === "string") : DEFAULT_ALLOWED_NAMES;
       for (const parameter of node.params) {
         const annotation = functionParameterTypeAnnotation(parameter);
         if (annotation === null || annotation === undefined)
@@ -3752,7 +3753,7 @@ var noUnknownParametersRule = defineRule42({
   }
 });
 
-// oxlint/anti-slop/rules/no-unknown-returns.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-unknown-returns.ts
 import { defineRule as defineRule43 } from "@oxlint/plugins";
 var noUnknownReturnsRule = defineRule43({
   meta: {
@@ -3806,7 +3807,7 @@ var noUnknownReturnsRule = defineRule43({
   }
 });
 
-// oxlint/anti-slop/rules/no-unknown-type-aliases.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-unknown-type-aliases.ts
 import { defineRule as defineRule44 } from "@oxlint/plugins";
 var noUnknownTypeAliasesRule = defineRule44({
   meta: {
@@ -3845,7 +3846,7 @@ var noUnknownTypeAliasesRule = defineRule44({
   }
 });
 
-// oxlint/anti-slop/rules/no-unsafe-dictionary-type.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-unsafe-dictionary-type.ts
 import { defineRule as defineRule45 } from "@oxlint/plugins";
 var typeNodeKinds = new Set([
   "JSDocNonNullableType",
@@ -3974,7 +3975,7 @@ var noUnsafeDictionaryTypeRule = defineRule45({
   }
 });
 
-// oxlint/anti-slop/rules/no-unsafe-inner-html.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-unsafe-inner-html.ts
 import { defineRule as defineRule46 } from "@oxlint/plugins";
 var SAFE_HTML = /^\s*safe-html:/u;
 function isStaticHtml(node) {
@@ -4024,8 +4025,6 @@ var noUnsafeInnerHtmlRule = defineRule46({
           return;
         if (node.parent.type !== "ObjectExpression")
           return;
-        if (node.value.type === "AssignmentPattern" || node.value.type === "RestElement")
-          return;
         if (isStaticHtml(node.value))
           return;
         if (hasSafeHtmlComment(context.sourceCode, node))
@@ -4036,7 +4035,7 @@ var noUnsafeInnerHtmlRule = defineRule46({
   }
 });
 
-// oxlint/anti-slop/rules/no-untranslated-jsx-literal.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-untranslated-jsx-literal.ts
 import { defineRule as defineRule47 } from "@oxlint/plugins";
 var DEFAULT_IGNORED = new Set(["code", "kbd", "pre", "samp", "script", "style", "var"]);
 var DEFAULT_ALLOWED2 = new Set([
@@ -4175,7 +4174,7 @@ var noUntranslatedJsxLiteralRule = defineRule47({
   }
 });
 
-// oxlint/anti-slop/rules/no-unused-catch-binding.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-unused-catch-binding.ts
 import { defineRule as defineRule48 } from "@oxlint/plugins";
 var noUnusedCatchBindingRule = defineRule48({
   meta: {
@@ -4201,7 +4200,7 @@ var noUnusedCatchBindingRule = defineRule48({
   }
 });
 
-// oxlint/anti-slop/rules/no-vacuous-throw-assertion.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-vacuous-throw-assertion.ts
 import { defineRule as defineRule49 } from "@oxlint/plugins";
 var THROW_MATCHERS = new Set(["toThrow", "toThrowError"]);
 function propertyName7(node) {
@@ -4251,7 +4250,7 @@ var noVacuousThrowAssertionRule = defineRule49({
   }
 });
 
-// oxlint/anti-slop/rules/no-widen-then-assert.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-widen-then-assert.ts
 import { defineRule as defineRule50 } from "@oxlint/plugins";
 var functionBoundaryTypes = new Set([
   "ArrowFunctionExpression",
@@ -4487,7 +4486,7 @@ var noWidenThenAssertRule = defineRule50({
   }
 });
 
-// oxlint/anti-slop/rules/no-window-open.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/no-window-open.ts
 import { defineRule as defineRule51 } from "@oxlint/plugins";
 var HOSTS = new Set(["window", "globalThis", "self"]);
 function isGlobalOpen(sourceCode, callee) {
@@ -4529,7 +4528,7 @@ var noWindowOpenRule = defineRule51({
   }
 });
 
-// oxlint/anti-slop/rules/require-fetch-timeout.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/require-fetch-timeout.ts
 import { defineRule as defineRule52 } from "@oxlint/plugins";
 function isFetchCallee(callee) {
   if (callee.type === "Identifier")
@@ -4591,7 +4590,7 @@ var requireFetchTimeoutRule = defineRule52({
   }
 });
 
-// oxlint/anti-slop/rules/require-safety-comment-for-type-assertion.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/require-safety-comment-for-type-assertion.ts
 import { defineRule as defineRule53 } from "@oxlint/plugins";
 var DEFAULT_SAFETY_MARKERS = ["SAFETY"];
 var commentOwnerKinds = new Set([
@@ -4684,7 +4683,7 @@ var requireSafetyCommentForTypeAssertionRule = defineRule53({
   }
 });
 
-// oxlint/anti-slop/rules/require-suppression-description.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/rules/require-suppression-description.ts
 import { defineRule as defineRule54 } from "@oxlint/plugins";
 var DISABLE = /\b(?:eslint|oxlint)-disable(?:-next-line|-line)?\b/u;
 var ENABLE = /\b(?:eslint|oxlint)-enable\b/u;
@@ -4722,7 +4721,7 @@ var requireSuppressionDescriptionRule = defineRule54({
   }
 });
 
-// oxlint/anti-slop/index.ts
+// ../../tools.worktrees/PresetsPath/adapters/presets/oxlint/anti-slop/index.ts
 var antiSlopPlugin = eslintCompatPlugin({
   meta: { name: "anti-slop" },
   rules: {
